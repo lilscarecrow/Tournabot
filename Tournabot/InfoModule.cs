@@ -8,6 +8,8 @@ namespace Tournabot
 {
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
+        public Program program { get; set; }
+
         [Command("ping", RunMode = RunMode.Async)]
         [Summary("A simple test")]
         [RequireContext(ContextType.Guild)]

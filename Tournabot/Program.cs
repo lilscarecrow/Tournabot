@@ -9,7 +9,7 @@ using MySql.Data.MySqlClient;
 
 namespace Tournabot
 {
-    class Program
+    public class Program
     {
         private DiscordSocketClient client;
         private CommandService commands;
