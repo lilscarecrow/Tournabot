@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using MySql.Data.MySqlClient;
 
 namespace Tournabot
 {
@@ -59,6 +60,45 @@ namespace Tournabot
             if (!result.IsSuccess)
             {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
+            }
+        }
+
+        private async void MysqlConnect()
+        {
+            MySqlConnection conn = null;
+            MySqlDataReader rdr = null;
+            string myConnectionString = "server=localhost;uid=root;pwd=root;database=boys;";
+            try
+            {
+                conn = new MySqlConnection();
+                conn.ConnectionString = myConnectionString;
+                conn.Open();
+                string stm = "SELECT * FROM test";
+                MySqlCommand cmd = new MySqlCommand(stm, conn);
+                rdr = cmd.ExecuteReader();
+
+                foreach (SocketGuild serv in client.Guilds)
+                {
+                    await serv.DefaultChannel.SendMessageAsync("Connected to Boy Database version : " + conn.ServerVersion);
+                }
+            }
+            catch (MySqlException ex)
+            {
+                foreach (SocketGuild serv in client.Guilds)
+                {
+                    await serv.DefaultChannel.SendMessageAsync(ex.Message);
+                }
+            }
+            finally
+            {
+                if (rdr != null)
+                {
+                    rdr.Close();
+                }
+                if (conn != null)
+                {
+                    conn.Close();
+                }
             }
         }
     }
