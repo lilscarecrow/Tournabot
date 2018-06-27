@@ -33,7 +33,7 @@ namespace Tournabot
 
             await services.GetService<ConfigHandler>().PopulateConfig();
 
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
             await client.LoginAsync(TokenType.Bot, services.GetService<ConfigHandler>().GetToken());
             await client.StartAsync();
