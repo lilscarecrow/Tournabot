@@ -39,6 +39,8 @@ namespace Tournabot
             await client.LoginAsync(TokenType.Bot, services.GetService<ConfigHandler>().GetToken());
             await client.StartAsync();
 
+            MysqlConnect();
+
             // Block this task until the program is closed.
             await Task.Delay(-1);
         }
@@ -67,7 +69,7 @@ namespace Tournabot
         {
             MySqlConnection conn = null;
             MySqlDataReader rdr = null;
-            string myConnectionString = "server=localhost;uid=root;pwd=root;database=boys;";
+            string myConnectionString = services.GetService<ConfigHandler>().GetSql();
             try
             {
                 conn = new MySqlConnection();
@@ -76,18 +78,16 @@ namespace Tournabot
                 string stm = "SELECT * FROM test";
                 MySqlCommand cmd = new MySqlCommand(stm, conn);
                 rdr = cmd.ExecuteReader();
-
-                foreach (SocketGuild serv in client.Guilds)
+                while(rdr.Read())
                 {
-                    await serv.DefaultChannel.SendMessageAsync("Connected to Boy Database version : " + conn.ServerVersion);
+                    Console.WriteLine("Name = " + rdr.GetString(1));
                 }
+
+                Console.WriteLine("Connected to Database version : " + conn.ServerVersion);
             }
             catch (MySqlException ex)
             {
-                foreach (SocketGuild serv in client.Guilds)
-                {
-                    await serv.DefaultChannel.SendMessageAsync(ex.Message);
-                }
+                Console.WriteLine(ex.Message);
             }
             finally
             {

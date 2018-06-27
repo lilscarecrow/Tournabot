@@ -15,13 +15,15 @@ namespace Tournabot
         struct Config
         {
             public string token;
+            public string sql;
         }
 
         public ConfigHandler()
         {
             conf = new Config()
             {
-                token = ""
+                token = "",
+                sql = ""
             };
         }
 
@@ -60,6 +62,11 @@ namespace Tournabot
         public string GetToken()
         {
             return conf.token;
+        }
+
+        public string GetSql()
+        {
+            return conf.sql;
         }
     }
 }
