@@ -16,6 +16,9 @@ namespace Tournabot
         {
             public string token;
             public string sql;
+            public string ToornamentApiKey;
+            public string ToornamentId;
+            public string ToornamentSecret;
         }
 
         public ConfigHandler()
@@ -23,7 +26,10 @@ namespace Tournabot
             conf = new Config()
             {
                 token = "",
-                sql = ""
+                sql = "",
+                ToornamentApiKey = "",
+                ToornamentId = "",
+                ToornamentSecret = ""
             };
         }
 
@@ -67,6 +73,21 @@ namespace Tournabot
         public string GetSql()
         {
             return conf.sql;
+        }
+
+        public string GetToornamentApiKey()
+        {
+            return conf.ToornamentApiKey;
+        }
+
+        public string GetToornamentId()
+        {
+            return conf.ToornamentId;
+        }
+
+        public string GetToornamentSecret()
+        {
+            return conf.ToornamentSecret;
         }
     }
 }

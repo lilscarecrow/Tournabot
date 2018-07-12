@@ -30,9 +30,12 @@ namespace Tournabot
                 .AddSingleton(client)
                 .AddSingleton(commands)
                 .AddSingleton<ConfigHandler>()
+                .AddSingleton<ToornamentService>()
                 .BuildServiceProvider();
 
             await services.GetService<ConfigHandler>().PopulateConfig();
+
+            services.GetService<ToornamentService>().Request();
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
