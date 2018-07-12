@@ -26,7 +26,7 @@ namespace Tournabot
         public async Task CheckRole()
         {
             SocketGuildUser user = Context.User as SocketGuildUser;
-
+            Console.WriteLine(user.Username);
             //await Context.Channel.SendMessageAsync("pong!");
         }
     }
