@@ -19,6 +19,9 @@ namespace Tournabot
             public string ToornamentApiKey;
             public string ToornamentId;
             public string ToornamentSecret;
+            public string TournamentSessionId;
+            public string TournamentRegisteredRole;
+            public string TournamentCheckedInRole;
         }
 
         public ConfigHandler()
@@ -29,14 +32,16 @@ namespace Tournabot
                 sql = "",
                 ToornamentApiKey = "",
                 ToornamentId = "",
-                ToornamentSecret = ""
+                ToornamentSecret = "",
+                TournamentSessionId = "",
+                TournamentRegisteredRole = "",
+                TournamentCheckedInRole = ""
             };
         }
 
         public async Task PopulateConfig()
         {
             configPath = Path.Combine(Directory.GetCurrentDirectory(), "config.json").Replace(@"\", @"\\");
-            Console.WriteLine(configPath);
 
             if (!File.Exists(configPath))
             {
@@ -88,6 +93,21 @@ namespace Tournabot
         public string GetToornamentSecret()
         {
             return conf.ToornamentSecret;
+        }
+
+        public string GetTournamentSessionId()
+        {
+            return conf.TournamentSessionId;
+        }
+
+        public ulong GetTournamentRegisteredRole()
+        {
+            return ulong.Parse(conf.TournamentRegisteredRole);
+        }
+
+        public ulong GetTournamentCheckedInRole()
+        {
+            return ulong.Parse(conf.TournamentCheckedInRole);
         }
     }
 }

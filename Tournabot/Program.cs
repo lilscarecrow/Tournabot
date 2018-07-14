@@ -6,6 +6,7 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using MySql.Data.MySqlClient;
+using System.Data.Common;
 
 namespace Tournabot
 {
@@ -34,8 +35,6 @@ namespace Tournabot
                 .BuildServiceProvider();
 
             await services.GetService<ConfigHandler>().PopulateConfig();
-
-            services.GetService<ToornamentService>().Request();
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
@@ -71,7 +70,7 @@ namespace Tournabot
         private async void MysqlConnect()
         {
             MySqlConnection conn = null;
-            MySqlDataReader rdr = null;
+            DbDataReader rdr = null;
             string myConnectionString = services.GetService<ConfigHandler>().GetSql();
             try
             {
@@ -80,7 +79,7 @@ namespace Tournabot
                 conn.Open();
                 string stm = "SELECT * FROM test";
                 MySqlCommand cmd = new MySqlCommand(stm, conn);
-                rdr = cmd.ExecuteReader();
+                rdr = await cmd.ExecuteReaderAsync();
                 while(rdr.Read())
                 {
                     Console.WriteLine("Name = " + rdr.GetString(1));
