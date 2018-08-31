@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using Discord.Rest;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Tournabot
@@ -16,12 +15,10 @@ namespace Tournabot
         {
             public string token;
             public string sql;
-            public string ToornamentApiKey;
-            public string ToornamentId;
-            public string ToornamentSecret;
-            public string TournamentSessionId;
-            public string TournamentRegisteredRole;
-            public string TournamentCheckedInRole;
+            public string signUpChannel;
+            public string signUpMessage;
+            public string checkInMessage;
+            public string regionMessage;
         }
 
         public ConfigHandler()
@@ -30,12 +27,10 @@ namespace Tournabot
             {
                 token = "",
                 sql = "",
-                ToornamentApiKey = "",
-                ToornamentId = "",
-                ToornamentSecret = "",
-                TournamentSessionId = "",
-                TournamentRegisteredRole = "",
-                TournamentCheckedInRole = ""
+                signUpChannel = "",
+                signUpMessage = "",
+                checkInMessage = "",
+                regionMessage = "",
             };
         }
 
@@ -45,14 +40,6 @@ namespace Tournabot
 
             if (!File.Exists(configPath))
             {
-                /*using (var f = File.Create(configPath))
-                {
-                    DirectoryInfo dInfo = new DirectoryInfo(configPath);
-                    DirectorySecurity dSecurity = dInfo.GetAccessControl();
-                    dSecurity.AddAccessRule(new FileSystemAccessRule("everyone", FileSystemRights.FullControl, InheritanceFlags.ObjectInherit | InheritanceFlags.ContainerInherit, PropagationFlags.NoPropagateInherit, AccessControlType.Allow));
-                    dInfo.SetAccessControl(dSecurity);
-                }*/
-
                 using (StreamWriter sw = File.AppendText(configPath))
                 {
                     sw.WriteLine(JsonConvert.SerializeObject(conf));
@@ -80,34 +67,66 @@ namespace Tournabot
             return conf.sql;
         }
 
-        public string GetToornamentApiKey()
+        public ulong GetSignUpChannel()
         {
-            return conf.ToornamentApiKey;
+            return ulong.Parse(conf.signUpChannel);
         }
 
-        public string GetToornamentId()
+        public ulong GetSignUpMessage()
         {
-            return conf.ToornamentId;
+            return ulong.Parse(conf.signUpMessage);
         }
 
-        public string GetToornamentSecret()
+        public void SaveSignUpMessage(RestUserMessage message)
         {
-            return conf.ToornamentSecret;
+            conf.signUpMessage = message.Id.ToString();
+
+            using (StreamWriter sw = new StreamWriter(configPath, false))
+            {
+                sw.WriteLine(JsonConvert.SerializeObject(conf));
+            }
+            using (StreamReader reader = new StreamReader(configPath))
+            {
+                conf = JsonConvert.DeserializeObject<Config>(reader.ReadLine());
+            }
         }
 
-        public string GetTournamentSessionId()
+        public ulong GetCheckInMessage()
         {
-            return conf.TournamentSessionId;
+            return ulong.Parse(conf.checkInMessage);
         }
 
-        public ulong GetTournamentRegisteredRole()
+        public void SaveCheckInMessage(RestUserMessage message)
         {
-            return ulong.Parse(conf.TournamentRegisteredRole);
+            conf.checkInMessage = message.Id.ToString();
+
+            using (StreamWriter sw = new StreamWriter(configPath, false))
+            {
+                sw.WriteLine(JsonConvert.SerializeObject(conf));
+            }
+            using (StreamReader reader = new StreamReader(configPath))
+            {
+                conf = JsonConvert.DeserializeObject<Config>(reader.ReadLine());
+            }
         }
 
-        public ulong GetTournamentCheckedInRole()
+        public ulong GetRegionMessage()
         {
-            return ulong.Parse(conf.TournamentCheckedInRole);
+            return ulong.Parse(conf.regionMessage);
+        }
+
+        public void SaveRegionMessage(RestUserMessage message)
+        {
+            conf.regionMessage = message.Id.ToString();
+
+            using (StreamWriter sw = new StreamWriter(configPath, false))
+            {
+                sw.WriteLine(JsonConvert.SerializeObject(conf));
+            }
+            using (StreamReader reader = new StreamReader(configPath))
+            {
+                conf = JsonConvert.DeserializeObject<Config>(reader.ReadLine());
+            }
         }
     }
 }
