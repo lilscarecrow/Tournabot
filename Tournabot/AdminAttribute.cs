@@ -16,6 +16,6 @@ public class AdminAttribute : PreconditionAttribute
                 return PreconditionResult.FromSuccess();
         }
         await Task.CompletedTask;
-        return PreconditionResult.FromError("You must be the owner of the bot to run this command.");   
+        return PreconditionResult.FromError("You must be an Admin to run this command.");   
     }
 }
