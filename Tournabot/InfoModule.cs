@@ -48,15 +48,20 @@ namespace Tournabot
         public async Task Dm()
         {
             var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync("Hi, here is our DM channel! Feel free to use the following commands:\n" +
-                "```!join *in-game name*\n" +
-                "!status\n" +
-                "!unregister```");
+            await dmChannel.SendMessageAsync("Hello! Welcome to The Darwin Elite. This is a hub for many Darwin Tournaments to come! " +
+                "In order to keep members organized, please reply with the following information (with the `!join` command): \n" +
+                "```In-game Name```\n" +
+                "Example:\n" +
+                "```!join lilscarerow```\n" +
+                "Other commands:\n" +
+                "```!status\n" +
+                "!unregister```\n" +
+                "If you have any questions or encounter any problems, please DM lilscarecrow#5308 on Discord.");
         }
 
         [Command("help", RunMode = RunMode.Async)]
         [Summary("All the info")]
-        [RequireContext(ContextType.Guild)]
+        [RequireContext(ContextType.DM)]
         public async Task Help()
         {
             try
@@ -283,8 +288,7 @@ namespace Tournabot
                 Context.Guild.GetRole(config.GetFinalistRole())
             };
             var message = await program.CreateBrackets(roles);
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
+            await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(message);
         }
 
         [Command("calculateScores", RunMode = RunMode.Async)]
@@ -322,6 +326,15 @@ namespace Tournabot
             var message = await program.Crown(id);
             await Context.Guild.GetUser(id).AddRoleAsync(Context.Guild.GetRole(config.GetChampionRole()));
             await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(message);
+        }
+
+        [Command("score", RunMode = RunMode.Async)]
+        [Summary("Set the scores for a match")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Score(ulong id, string scores)
+        {
+            var message = await program.Score(id, scores, true);
+            await Context.Channel.SendMessageAsync(message);
         }
 
         [Command("nuke", RunMode = RunMode.Async)]
@@ -382,7 +395,7 @@ namespace Tournabot
         [RequireContext(ContextType.DM)]
         public async Task Score(string scores)
         {
-            var message = await program.Score(Context.User.Id, scores);
+            var message = await program.Score(Context.User.Id, scores, false);
             await Context.Channel.SendMessageAsync(message);
         }
     }

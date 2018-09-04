@@ -265,7 +265,7 @@ namespace Tournabot
                         await db.SaveChangesAsync();
                         message = "Successfully signed up for the upcoming tournament!";
                     }
-                    else if (user.IsDirector)
+                    else if (user != null && user.IsDirector)
                         message = "You are a director, silly! You can't register!";
                     else if (total >= 100)
                     {
@@ -426,7 +426,7 @@ namespace Tournabot
                         message = "Successfully removed " + user.Name;
                     }
                     else
-                        message = user.Name + " is not registered in the database.";
+                        message = "That player is not registered in the database.";
                 }
                 catch (Exception ex)
                 {
@@ -448,9 +448,9 @@ namespace Tournabot
                     if (users != null && users.Count() > 0)
                     {
                         StringBuilder builder = new StringBuilder();
-                        builder.Append("Successfully found member(s):```");
+                        builder.AppendLine("Successfully found member(s):```");
                         await users.ForEachAsync(u => builder.AppendLine("Id = " + u.Id + "\nDiscordTag = " + u.DiscordTag + "\nName = " + u.Name));
-                        builder.Append(" ```");
+                        builder.AppendLine(" ```");
                         message = builder.ToString();
                     }
                     else
@@ -561,16 +561,22 @@ namespace Tournabot
             {
                 try
                 {
+                    var directorMessage = "Hello! I'm here to help you in setting up your matches! Here is the list of commands you can use:\n" +
+                        "Use this to send your players the matchcode and/or a message. It will dm them directly!\n Example:\n`!sendCode This is your match code: AHF4. " +
+                        "Good Luck and have fun!` ```!sendCode *matchcode*``` This will give you a list of the players in your match.```!overview```" +
+                        "Change a single score for a player. This should only be used to correct a score AFTER you entered the scores using the `!score *scores*` command." +
+                        "```!correct *newScore* *name* ``` THIS IS THE MOST IMPORTANT ONE! DO NOT MESS THIS ONE UP!!! Scores will be entered on the google spreadsheet (Name, Placement, Kills, Score).\n" +
+                        "Only enter the SCORE value for the player in the order they appear on this ->`!overview`<- screen. Enter it in the following way: ```!score 100,50,25,75,50,50,100,125,150,25```";
                     StringBuilder builder = new StringBuilder();
                     var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
                     await db.Users.ForEachAsync(u => guild.GetUser(u.Id).RemoveRolesAsync(roles));//Remove all roles
                     var players = db.Users.Where(u => u.CheckedIn && !u.IsDirector).OrderBy(u => Guid.NewGuid());//Randomize players
                     var buckets = (int) Math.Ceiling(players.Count() / 10.0);
-                    var directors = db.Users.Where(u => u.IsDirector).OrderBy(u => Guid.NewGuid()).Take(buckets);//Take number of directors needed randomly
+                    var finalsDirector = guild.Users.FirstOrDefault(u => u.Roles.Any(x => x.Id == services.GetService<ConfigHandler>().GetFinalsDirectorRole()));
+                    var directors = db.Users.Where(u => u.IsDirector && u.Id != finalsDirector.Id).OrderBy(u => Guid.NewGuid()).Take(buckets);//Take number of directors needed randomly
                     await db.Database.ExecuteSqlCommandAsync("TRUNCATE TABLE public.\"Directors\"");
                     if (buckets == 1)//FINALS
                     {
-                        var finalsDirector = guild.Users.FirstOrDefault(u => u.Roles.Any(x => x.Id == roles[10].Id));
                         if (finalsDirector == null)
                             throw new Exception("Can't find Finals Director.");
                         var finalsDirectorDb = await db.Users.SingleOrDefaultAsync(u => u.Id == finalsDirector.Id);
@@ -583,14 +589,17 @@ namespace Tournabot
                             MatchId = roles[10].Id,
                             Submitted = false
                         };
-                        builder.Append("Finals Director:```" + dir.DirectorName + "```Finalists:```");
+                        builder.Append("Finals Director:```" + dir.DirectorName + "```Finalists:");
+                        builder.AppendLine("```");
                         db.Directors.Add(dir);
                         await players.ForEachAsync(u => 
                         {
                             guild.GetUser(u.Id).AddRoleAsync(roles[10]);
                             builder.AppendLine(u.Name);
                         });
-                        builder.Append(" ```");
+                        builder.AppendLine("```");
+                        var dirDm = await finalsDirector.GetOrCreateDMChannelAsync();
+                        await dirDm.SendMessageAsync(directorMessage);
                     }
                     else
                     {
@@ -611,6 +620,7 @@ namespace Tournabot
                                 };
                                 db.Directors.Add(dir);
                                 directorList.Add(dir);
+                                var dirDm = guild.GetUser(u.Id).GetOrCreateDMChannelAsync().Result.SendMessageAsync(directorMessage);
                                 count++;
                             }
                         });
@@ -623,11 +633,12 @@ namespace Tournabot
                         });
                         for(count = 0; count < buckets; count++)
                         {
-                            builder.Append(roles[count].Name + " Director:```" + directorList[count] + "```Players:```");
+                            builder.Append(roles[count].Name + " Director:```" + directorList[count] + "```Players:");
+                            builder.AppendLine("```");
                             var roledPlayers = guild.Users.Where(u => u.Roles.Any(x => x.Id == roles[count].Id));
                             var dbusers = db.Users.Where(u => roledPlayers.Any(x => x.Id == u.Id));
                             await dbusers.ForEachAsync(u => builder.AppendLine(u.Name));
-                            builder.Append(" ```");
+                            builder.AppendLine("```");
                         }
                     }
                     message = builder.Length == 0 ? "No data to return." : builder.ToString();
@@ -776,14 +787,14 @@ namespace Tournabot
                 {
                     StringBuilder builder = new StringBuilder();
                     var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+                    await guild.DownloadUsersAsync();
                     var director = await db.Directors.SingleOrDefaultAsync(u => u.Id == id);
                     var users = guild.Users.Where(u => u.Roles.Any(x => x.Id == director.MatchId));
                     var dbusers = db.Users.Where(u => users.Any(x => x.Id == u.Id));
                     builder.Append("Message sent to:```");
-                    await dbusers.ForEachAsync(async u =>
+                    await dbusers.ForEachAsync(u =>
                     {
-                        var dmChannel = await guild.GetUser(u.Id).GetOrCreateDMChannelAsync();
-                        await dmChannel.SendMessageAsync("Message from your director, " + director.DirectorName + ":\n```" + code + "```");
+                        var dmChannel = guild.GetUser(u.Id).GetOrCreateDMChannelAsync().Result.SendMessageAsync("Message from your director, " + director.DirectorName + ":\n```" + code + "```");
                         builder.AppendLine(u.Name);
                     });
                     builder.Append(" ```");
@@ -807,6 +818,7 @@ namespace Tournabot
                 {
                     StringBuilder builder = new StringBuilder();
                     var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+                    await guild.DownloadUsersAsync();
                     var director = await db.Directors.SingleOrDefaultAsync(u => u.Id == id);
                     var role = guild.Roles.SingleOrDefault(u => u.Id == director.MatchId);
                     var users = guild.Users.Where(u => u.Roles.Any(x => x.Id == director.MatchId));
@@ -837,6 +849,7 @@ namespace Tournabot
                 try
                 {
                     var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+                    await guild.DownloadUsersAsync();
                     var director = await db.Directors.SingleOrDefaultAsync(u => u.Id == id);
                     var role = guild.Roles.SingleOrDefault(u => u.Id == director.MatchId);
                     var users = guild.Users.Where(u => u.Roles.Any(x => x.Id == director.MatchId));
@@ -865,7 +878,7 @@ namespace Tournabot
             return message;
         }
 
-        public async Task<string> Score(ulong id, string scores)
+        public async Task<string> Score(ulong id, string scores, bool overrided)
         {
             string message = "Score";
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
@@ -873,7 +886,7 @@ namespace Tournabot
                 try
                 {
                     var director = await db.Directors.SingleOrDefaultAsync(u => u.Id == id);
-                    if (director.Submitted)
+                    if (director.Submitted && !overrided)
                     {
                         message = "You already submitted results. You can make a correction (if you think there is a mistake) by using the command```!correct *name* *newScore*``` ";
                     }
@@ -882,6 +895,7 @@ namespace Tournabot
                         StringBuilder builder = new StringBuilder();
                         var scoreArray = scores.Split(',').Select(int.Parse).ToArray();
                         var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+                        await guild.DownloadUsersAsync();
                         var role = guild.Roles.SingleOrDefault(u => u.Id == director.MatchId);
                         var users = guild.Users.Where(u => u.Roles.Any(x => x.Id == director.MatchId));
                         var dbusers = db.Users.Where(u => users.Any(x => x.Id == u.Id));
@@ -909,7 +923,7 @@ namespace Tournabot
                             var score = u.ThirdGame ?? u.SecondGame ?? u.FirstGame ?? 0;
                             builder.AppendLine(u.Name + ":" + score);
                             db.Users.Update(u);
-
+                            count++;
                         });
                         director.Submitted = true;
                         db.Directors.Update(director);
