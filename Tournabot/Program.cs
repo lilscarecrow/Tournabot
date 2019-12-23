@@ -10,6 +10,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Collections.Generic;
+using Discord.Rest;
 
 namespace Tournabot
 {
@@ -18,6 +19,8 @@ namespace Tournabot
         private DiscordSocketClient client;
         private CommandService commands;
         private IServiceProvider services;
+        private List<List<string>> playerList = new List<List<string>>();
+        private Dictionary<ulong, Scrim> scrimList= new Dictionary<ulong, Scrim>();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
@@ -76,7 +79,7 @@ namespace Tournabot
                     var user = await channel.GetUserAsync(reaction.UserId);
                     var sqlmessage = await AddMemberRegion(user.Id, "NA");
                     var dmChannel = await user.GetOrCreateDMChannelAsync();
-                    var dmMessage = "Adding Region as NA..." + sqlmessage;
+                    var dmMessage = "Adding Region as East..." + sqlmessage;
                     await dmChannel.SendMessageAsync(dmMessage);
                 }
                 else if (reaction.Emote.Name == "🇪🇺")
@@ -85,6 +88,14 @@ namespace Tournabot
                     var sqlmessage = await AddMemberRegion(user.Id, "EU");
                     var dmChannel = await user.GetOrCreateDMChannelAsync();
                     var dmMessage = "Adding Region as EU..." + sqlmessage;
+                    await dmChannel.SendMessageAsync(dmMessage);
+                }
+                else if (reaction.Emote.Name == "🇼")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var sqlmessage = await AddMemberRegion(user.Id, "WE");
+                    var dmChannel = await user.GetOrCreateDMChannelAsync();
+                    var dmMessage = "Adding Region as West..." + sqlmessage;
                     await dmChannel.SendMessageAsync(dmMessage);
                 }
             }
@@ -118,6 +129,26 @@ namespace Tournabot
                     await dmChannel.SendMessageAsync(dmMessage);
                 }
             }
+            foreach(KeyValuePair<ulong, Scrim> scrim in scrimList)
+            {
+                if(message.Id == scrim.Value.GetMessageId())
+                {
+                    if (reaction.Emote.Name == "✅")
+                    {
+                        var user = await channel.GetUserAsync(reaction.UserId);
+                        var dmMessage = await scrim.Value.AddPlayer(user.Id, user.Username);
+                        var dmChannel = await user.GetOrCreateDMChannelAsync();
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                    if (reaction.Emote.Name == "🤖")
+                    {
+                        var user = await channel.GetUserAsync(reaction.UserId);
+                        var dmMessage = await scrim.Value.AddDirector(user.Id, user.Username);
+                        var dmChannel = await user.GetOrCreateDMChannelAsync();
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                }
+            }
         }
 
         public async Task HandleJoinedGuild(SocketGuildUser user)
@@ -125,7 +156,7 @@ namespace Tournabot
             //var OwnerChannel = await user.Guild.Owner.GetOrCreateDMChannelAsync();
             var channel = await user.GetOrCreateDMChannelAsync();
             var message = "Hello! Welcome to The Darwin Elite. This is a hub for many Darwin Tournaments to come! " +
-                "In order to keep members organized, please reply with the following information (with the `!join` command): \n" +
+                "In order to keep members organized, please reply in THIS dm channel with the following information (with the `!join` command): \n" +
                 "```In-game Name```\n" +
                 "Example:\n" +
                 "```!join lilscarerow```\n" +
@@ -257,7 +288,7 @@ namespace Tournabot
                 try
                 {
                     var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id);
-                    var total = db.Users.Where(u => u.CheckedIn).Count();
+                    var total = db.Users.Where(u => u.SignedUp).Count();
                     if (user != null && total < 100 && !user.IsDirector)
                     {
                         user.SignedUp = true;
@@ -326,7 +357,7 @@ namespace Tournabot
                     var usersCheckedIn = db.Users.Where(u => u.CheckedIn);
                     if(usersCheckedIn.Count() >= 100)
                         message = "Registration is full.";
-                    if (user != null && user.WaitList)
+                    else if (user != null && user.WaitList)
                     {
                         user.CheckedIn = true;
                         db.Users.Update(user);
@@ -367,6 +398,157 @@ namespace Tournabot
                     });
                     var count = await db.SaveChangesAsync();
                     message = "Successfully reset " + count + " records!";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
+            return message;
+        }
+
+        public async Task<string> RefreshRegionSelection(IEnumerable<IUser> east, IEnumerable<IUser> eu, IEnumerable<IUser> west)
+        {
+            string message = "RefreshRegion";
+            var count = 0;
+            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine("Successfully updated region for member(s):```");
+                try
+                {
+                    builder.AppendLine("---NA---");
+                    foreach (var regionUser in east)
+                    {
+                        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == regionUser.Id);
+                        if (user == null)
+                        {
+                            continue;
+                        }
+                        if(user.Region != "NA")
+                        {
+                            user.Region = "NA";
+                            count++;
+                            builder.AppendLine(user.Name);
+                        }
+                        db.Users.Update(user);
+                    }
+                    builder.AppendLine("---EU---");
+                    foreach (var regionUser in eu)
+                    {
+                        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == regionUser.Id);
+                        if (user == null)
+                        {
+                            continue;
+                        }
+                        if (user.Region != "EU")
+                        {
+                            user.Region = "EU";
+                            count++;
+                            builder.AppendLine(user.Name);
+                        }
+                        db.Users.Update(user);
+                    }
+                    builder.AppendLine("---WE---");
+                    foreach (var regionUser in west)
+                    {
+                        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == regionUser.Id);
+                        if (user == null)
+                        {
+                            continue;
+                        }
+                        if (user.Region != "WE")
+                        {
+                            user.Region = "WE";
+                            count++;
+                            builder.AppendLine(user.Name);
+                        }
+                        db.Users.Update(user);
+                    }
+                    await db.SaveChangesAsync();
+                    builder.AppendLine("Total Updated: " + count + " ```");
+                    message = builder.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
+            return message;
+        }
+
+        public async Task<string> RefreshSignUpSelection(IEnumerable<IUser> signUpUsers)
+        {
+            string message = "RefreshSignUp";
+            var count = 0;
+            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine("Successfully updated sign ups for member(s):```");
+                try
+                {
+                    foreach (var signUpUser in signUpUsers)
+                    {
+                        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == signUpUser.Id);
+                        if (user == null)
+                        {
+                            continue;
+                        }
+                        if (!user.SignedUp)
+                        {
+                            user.SignedUp = true;
+                            count++;
+                            builder.AppendLine(user.Name);
+                        }
+                        db.Users.Update(user);
+                    }
+                    await db.SaveChangesAsync();
+                    builder.AppendLine("Total Updated: " + count + " ```");
+                    message = builder.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
+            return message;
+        }
+
+        public async Task<string> RefreshCheckInSelection(IEnumerable<IUser> checkInUsers)
+        {
+            string message = "RefreshCheckIn";
+            var count = 0;
+            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine("Successfully updated check ins for member(s):```");
+                try
+                {
+                    foreach (var checkInUser in checkInUsers)
+                    {
+                        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == checkInUser.Id);
+                        if (user == null)
+                        {
+                            continue;
+                        }
+                        if (user.SignedUp && !user.CheckedIn)
+                        {
+                            user.CheckedIn = true;
+                            count++;
+                            db.Users.Update(user);
+                            builder.AppendLine(user.Name);
+                        }
+                        else if (!user.SignedUp)
+                        {
+                            builder.AppendLine(user.Name + " --NOT SIGNED UP!");
+                        }
+                    }
+                    await db.SaveChangesAsync();
+                    builder.AppendLine("Total Updated: " + count + " ```");
+                    message = builder.ToString();
                 }
                 catch (Exception ex)
                 {
@@ -536,13 +718,25 @@ namespace Tournabot
                     var directors = db.Users.Where(u => u.IsDirector);
                     var signedUp = db.Users.Where(u => u.SignedUp);
                     var checkedIn = db.Users.Where(u => u.CheckedIn);
-                    builder.Append("Directors: ``` ");
+                    builder.AppendLine("Directors: ``` ");
                     await directors.ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.Append("```Signed Up: ``` ");
-                    await signedUp.ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.Append("```Checked In: ``` ");
-                    await checkedIn.ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.Append("```");
+                    builder.AppendLine("```Signed Up: NA```");
+                    await signedUp.Where(u => u.Region == "NA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```Signed Up: EU``` ");
+                    await signedUp.Where(u => u.Region == "EU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```Signed Up: WE``` ");
+                    await signedUp.Where(u => u.Region == "WE").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```Signed Up: No Region``` ");
+                    await signedUp.Where(u => u.Region == "XX").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```Checked In: NA``` ");
+                    await checkedIn.Where(u => u.Region == "NA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```Checked In: EU``` ");
+                    await checkedIn.Where(u => u.Region == "EU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```Checked In: WE``` ");
+                    await checkedIn.Where(u => u.Region == "WE").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```Checked In: No Region``` ");
+                    await checkedIn.Where(u => u.Region == "XX").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```");
                     message = builder.ToString();
                 }
                 catch (Exception ex)
@@ -554,7 +748,7 @@ namespace Tournabot
             return message;
         }
 
-        public async Task<string> CreateBrackets(List<IRole> roles)
+        public async Task<string> CreateBrackets()
         {
             string message = "Brackets";
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
@@ -567,14 +761,14 @@ namespace Tournabot
                         "Change a single score for a player. This should only be used to correct a score AFTER you entered the scores using the `!score *scores*` command." +
                         "```!correct *newScore* *name* ``` THIS IS THE MOST IMPORTANT ONE! DO NOT MESS THIS ONE UP!!! Scores will be entered on the google spreadsheet (Name, Placement, Kills, Score).\n" +
                         "Only enter the SCORE value for the player in the order they appear on this ->`!overview`<- screen. Enter it in the following way: ```!score 100,50,25,75,50,50,100,125,150,25```";
+                    string[] matches = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "Finals" };
                     StringBuilder builder = new StringBuilder();
                     var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
-                    await db.Users.ForEachAsync(u => guild.GetUser(u.Id).RemoveRolesAsync(roles));//Remove all roles
                     var players = db.Users.Where(u => u.CheckedIn && !u.IsDirector).OrderBy(u => Guid.NewGuid());//Randomize players
                     var buckets = (int) Math.Ceiling(players.Count() / 10.0);
                     var finalsDirector = guild.Users.FirstOrDefault(u => u.Roles.Any(x => x.Id == services.GetService<ConfigHandler>().GetFinalsDirectorRole()));
                     var directors = db.Users.Where(u => u.IsDirector && u.Id != finalsDirector.Id).OrderBy(u => Guid.NewGuid()).Take(buckets);//Take number of directors needed randomly
-                    await db.Database.ExecuteSqlCommandAsync("TRUNCATE TABLE public.\"Directors\"");
+                    //await db.Database.ExecuteSqlCommandAsync("TRUNCATE TABLE public.\"Directors\"");
                     if (buckets == 1)//FINALS
                     {
                         if (finalsDirector == null)
@@ -586,17 +780,16 @@ namespace Tournabot
                         {
                             Id = finalsDirectorDb.Id,
                             DirectorName = finalsDirectorDb.Name,
-                            MatchId = roles[10].Id,
+                            //MatchName = matches[10],
                             Submitted = false
                         };
                         builder.Append("Finals Director:```" + dir.DirectorName + "```Finalists:");
                         builder.AppendLine("```");
                         db.Directors.Add(dir);
-                        await players.ForEachAsync(u => 
+                        foreach(var user in players)
                         {
-                            guild.GetUser(u.Id).AddRoleAsync(roles[10]);
-                            builder.AppendLine(u.Name);
-                        });
+                            builder.AppendLine(user.Name);
+                        }
                         builder.AppendLine("```");
                         var dirDm = await finalsDirector.GetOrCreateDMChannelAsync();
                         await dirDm.SendMessageAsync(directorMessage);
@@ -610,35 +803,39 @@ namespace Tournabot
                             if (count < buckets)
                             {
                                 var user = guild.GetUser(u.Id);
-                                user.AddRoleAsync(roles[count]);
                                 var dir = new Directors
                                 {
                                     Id = u.Id,
                                     DirectorName = u.Name,
-                                    MatchId = roles[count].Id,
+                                    //MatchId = roles[count].Id,
                                     Submitted = false
                                 };
                                 db.Directors.Add(dir);
                                 directorList.Add(dir);
                                 var dirDm = guild.GetUser(u.Id).GetOrCreateDMChannelAsync().Result.SendMessageAsync(directorMessage);
+                                playerList.Add(new List<string>());
                                 count++;
                             }
                         });
                         count = 0;
-                        await players.ForEachAsync(u =>
+                        foreach(var user in players)
                         {
-                            guild.GetUser(u.Id).AddRoleAsync(roles[count]);
+                            //Console.WriteLine(user.Name + " ROLE: " + roles[count].Name);
+                            //await guild.GetUser(user.Id).AddRoleAsync(roles[count]);
+                            playerList[count].Add(user.Name);
                             count++;
                             count %= buckets;
-                        });
-                        for(count = 0; count < buckets; count++)
+                        }
+                        for (count = 0; count < buckets; count++)
                         {
-                            builder.Append(roles[count].Name + " Director:```" + directorList[count] + "```Players:");
+                            //builder.Append(roles[count].Name + " Director:```" + directorList[count].DirectorName + "```Players:");
                             builder.AppendLine("```");
-                            var roledPlayers = guild.Users.Where(u => u.Roles.Any(x => x.Id == roles[count].Id));
-                            var dbusers = db.Users.Where(u => roledPlayers.Any(x => x.Id == u.Id));
-                            await dbusers.ForEachAsync(u => builder.AppendLine(u.Name));
-                            builder.AppendLine("```");
+                            playerList[count].Sort();
+                            foreach(var user in playerList[count])
+                            {
+                                builder.AppendLine(user);
+                            }
+                            builder.AppendLine(" ```");
                         }
                     }
                     message = builder.Length == 0 ? "No data to return." : builder.ToString();
@@ -936,6 +1133,194 @@ namespace Tournabot
                 {
                     Console.WriteLine(ex.Message);
                     message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
+            return message;
+        }
+
+        public async Task<string> Verify()
+        {
+            string message = "Verfiy";
+            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
+            {
+                try
+                {
+                    StringBuilder builder = new StringBuilder();
+                    var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+                    await guild.DownloadUsersAsync();
+                    var missingUsers = guild.Users.Where(u => !db.Users.Any(x => x.Id == u.Id));
+                    builder.AppendLine("```");
+                    foreach (var user in missingUsers)
+                    {
+                        builder.AppendLine(user.Username + "#" + user.DiscriminatorValue);
+                    }
+                    builder.AppendLine("```");
+                    message = builder.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
+            return message;
+        }
+
+        public async Task<string> Rebuild()
+        {
+            string message = "Rebuild";
+            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
+            {
+                try
+                {
+                    var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+                    await guild.DownloadUsersAsync();
+                    var signUps = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSignUpChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSignUpMessage()) as RestUserMessage;
+                    var emote = new Emoji("✅");
+                    signUps.GetReactionUsersAsync(emote, 200).ForEach(x =>
+                    {
+                        message += " " + x;
+                        //db.Users.Where(u => u.Id == r.)
+                    });
+                    //var missingUsers = guild.Users.Where(u => !db.Users.Any(x => x.Id == u.Id));
+                    //builder.AppendLine("```");
+                    //foreach (var user in missingUsers)
+                    //{
+                    //    builder.AppendLine(user.Username + "#" + user.DiscriminatorValue);
+                    //}
+                    //builder.AppendLine("```");
+                    //message = builder.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
+            return message;
+        }
+
+        public async Task<string> FindRegion(ulong id)
+        {
+            string message = "FindRegion";
+            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
+            {
+                try
+                {
+                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id);
+                    if (user != null)
+                        message = user.Region;
+                    else
+                        message = "XX";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
+            return message;
+        }
+
+        public async Task<string> CreateScrim(ulong id, string region, int tolerance, ulong messageId)
+        {
+            string message = "The lobby has been created successfully! Go react to the post made in #scrim-announcement if you also want to enter. ```" +
+                    "COMMANDS:\n!code *lobby code* - sets the code to use when you start the scrim\n" +
+                    "!start - starts the scrim as long as the code was set using !code\n" +
+                    "!end - ends the scrim session```";
+            foreach(KeyValuePair<ulong, Scrim> scrim in scrimList)
+            {
+                if(scrim.Value.GetRegion() == region)
+                {
+                    message = "There is already a scrim in progress. You cannot create another at this time.";
+                    return message;
+                }
+            }
+            scrimList.Add(id, new Scrim(id, region, messageId, tolerance, this));
+            return message;
+        }
+
+        public async Task RemoveScrimInstance(ulong id)
+        {
+            var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+            IDMChannel dmChannel;
+            string dmMessage;
+            foreach (KeyValuePair<ulong, Scrim> scrim in scrimList)
+            {
+                if(scrim.Key == id)
+                {
+                    scrim.Value.EndScrim();
+                    await guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimChannel()).DeleteMessageAsync(scrim.Value.GetMessageId());
+                    dmChannel = await guild.GetUser(id).GetOrCreateDMChannelAsync();
+                    dmMessage = "The Scrim was successfully cancelled or timed out.";
+                    await dmChannel.SendMessageAsync(dmMessage);
+                    scrimList.Remove(id);
+                    return;
+                }
+            }
+            dmChannel = await guild.GetUser(id).GetOrCreateDMChannelAsync();
+            dmMessage = "The Scrim instance could not be found. Could not remove the scrim";
+            await dmChannel.SendMessageAsync(dmMessage);
+        }
+
+        public async Task AlertScrimOrganizer(ulong id, string message)
+        {
+            var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+            var dmChannel = await guild.GetUser(id).GetOrCreateDMChannelAsync();
+            await dmChannel.SendMessageAsync(message);
+        }
+
+        public async Task StartScrim(ulong id)
+        {
+            var guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+            IDMChannel dmChannel;
+            string dmMessage, code;
+            foreach (KeyValuePair<ulong, Scrim> scrim in scrimList)
+            {
+                if (scrim.Key == id)
+                {
+                    code = scrim.Value.GetCode();
+                    if (code == "")
+                    {
+                        dmChannel = await guild.GetUser(id).GetOrCreateDMChannelAsync();
+                        dmMessage = "There was no code provided. Please provide a code using !code *lobby code* before starting the scrim.";
+                        await dmChannel.SendMessageAsync(dmMessage);
+                        return;
+                    }
+                    //await guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimChannel()).DeleteMessageAsync(scrim.Value.GetMessageId());
+                    foreach (KeyValuePair<ulong, string> player in scrim.Value.GetPlayers())
+                    {
+                        dmChannel = await guild.GetUser(player.Key).GetOrCreateDMChannelAsync();
+                        dmMessage = "Your match is about to begin! The lobby code is: " + code;
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                    foreach (KeyValuePair<ulong, string> director in scrim.Value.GetDirector())
+                    {
+                        dmChannel = await guild.GetUser(director.Key).GetOrCreateDMChannelAsync();
+                        dmMessage = "Your match is about to begin! The lobby code is: " + code;
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                    dmChannel = await guild.GetUser(id).GetOrCreateDMChannelAsync();
+                    dmMessage = "The Scrim was successfully started! Codes have been sent out.";
+                    await dmChannel.SendMessageAsync(dmMessage);
+                    scrim.Value.SetTimer(3600000);
+                    return;
+                }
+            }
+            dmChannel = await guild.GetUser(id).GetOrCreateDMChannelAsync();
+            dmMessage = "The Scrim instance was not found. Could not start the scrim.";
+            await dmChannel.SendMessageAsync(dmMessage);
+        }
+
+        public async Task<string> ScrimCode(ulong id, string code)
+        {
+            string message = "The Scrim instance was not found. Could not set the code.";
+            foreach (KeyValuePair<ulong, Scrim> scrim in scrimList)
+            {
+                if (scrim.Key == id)
+                {
+                    message = scrim.Value.SetCode(code);
+                    return message;
                 }
             }
             return message;

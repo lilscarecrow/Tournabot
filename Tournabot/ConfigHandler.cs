@@ -25,19 +25,9 @@ namespace Tournabot
             public string regionMessage;
             public string directorRole;
             public string finalsDirectorRole;
-            public string matchA;
-            public string matchB;
-            public string matchC;
-            public string matchD;
-            public string matchE;
-            public string matchF;
-            public string matchG;
-            public string matchH;
-            public string matchI;
-            public string matchJ;
-            public string finalist;
             public string champion;
             public string guild;
+            public string scrimChannel;
         }
 
         public ConfigHandler()
@@ -54,19 +44,9 @@ namespace Tournabot
                 regionMessage = "",
                 directorRole = "",
                 finalsDirectorRole = "",
-                matchA = "",
-                matchB = "",
-                matchC = "",
-                matchD = "",
-                matchE = "",
-                matchF = "",
-                matchG = "",
-                matchH = "",
-                matchI = "",
-                matchJ = "",
-                finalist = "",
                 champion = "",
-                guild = ""
+                guild = "",
+                scrimChannel = ""
             };
         }
 
@@ -199,77 +179,6 @@ namespace Tournabot
             return ulong.Parse(conf.finalsDirectorRole);
         }
 
-        public ulong GetMatchARole()
-        {
-            return ulong.Parse(conf.matchA);
-        }
-
-        public ulong GetMatchBRole()
-        {
-            return ulong.Parse(conf.matchB);
-        }
-
-        public ulong GetMatchCRole()
-        {
-            return ulong.Parse(conf.matchC);
-        }
-
-        public ulong GetMatchDRole()
-        {
-            return ulong.Parse(conf.matchD);
-        }
-
-        public ulong GetMatchERole()
-        {
-            return ulong.Parse(conf.matchE);
-        }
-
-        public ulong GetMatchFRole()
-        {
-            return ulong.Parse(conf.matchF);
-        }
-
-        public ulong GetMatchGRole()
-        {
-            return ulong.Parse(conf.matchG);
-        }
-
-        public ulong GetMatchHRole()
-        {
-            return ulong.Parse(conf.matchH);
-        }
-
-        public ulong GetMatchIRole()
-        {
-            return ulong.Parse(conf.matchI);
-        }
-
-        public ulong GetMatchJRole()
-        {
-            return ulong.Parse(conf.matchJ);
-        }
-
-        public List<ulong> GetMatchRoles()
-        {
-            List<ulong> roles = new List<ulong>();
-            roles.Add(GetMatchARole());
-            roles.Add(GetMatchBRole());
-            roles.Add(GetMatchCRole());
-            roles.Add(GetMatchDRole());
-            roles.Add(GetMatchERole());
-            roles.Add(GetMatchFRole());
-            roles.Add(GetMatchGRole());
-            roles.Add(GetMatchHRole());
-            roles.Add(GetMatchIRole());
-            roles.Add(GetMatchJRole());
-            return roles;
-        }
-
-        public ulong GetFinalistRole()
-        {
-            return ulong.Parse(conf.finalist);
-        }
-
         public ulong GetChampionRole()
         {
             return ulong.Parse(conf.champion);
@@ -278,6 +187,11 @@ namespace Tournabot
         public ulong GetGuild()
         {
             return ulong.Parse(conf.guild);
+        }
+
+        public ulong GetScrimChannel()
+        {
+            return ulong.Parse(conf.scrimChannel);
         }
     }
 }

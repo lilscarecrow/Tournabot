@@ -1,10 +1,17 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
+using Discord.Rest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+//TEST
+using Tesseract;
+using System.IO;
+using System.Reflection;
+using System.Net;
 
 namespace Tournabot
 {
@@ -13,10 +20,38 @@ namespace Tournabot
         public Program program { get; set; }
         public ConfigHandler config { get; set; }
 
+        [Command("scan", RunMode = RunMode.Async)]
+        [Summary("Scan a result page")]
+        [RequireContext(ContextType.DM)]
+        public async Task Scan()
+        {
+            var message = "No file attached!";
+            if (!Context.Message.Attachments.Any())
+            {
+                await Context.Channel.SendMessageAsync(message);
+                return;
+            }
+            IAttachment att = Context.Message.Attachments.First();
+            string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), att.Filename).Replace(@"\", @"\\");
+            WebClient webClient = new WebClient();
+            Uri uri = new Uri(att.Url);
+            await webClient.DownloadFileTaskAsync(uri, filePath);
+            using (var engine = new TesseractEngine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "eng", EngineMode.Default))
+            {
+                using (var img = Pix.LoadFromFile(filePath))
+                {
+                    var page = engine.Process(img);
+                    message = page.GetText();
+                }
+            }
+            File.Delete(filePath);
+            await Context.Channel.SendMessageAsync(message);
+        }
+
         [Command("join", RunMode = RunMode.Async)]
         [Summary("Join the database fun")]
         [RequireContext(ContextType.DM)]
-        public async Task Join(string name)
+        public async Task Join([Remainder] string name)
         {
             var discordTag = Context.User.Username + "#" + Context.User.DiscriminatorValue;
             var message = await program.AddMember(Context.User.Id, discordTag, name);
@@ -82,7 +117,7 @@ namespace Tournabot
                         if (mod.Group == "admin")
                             builder.Append("admin ");
                         builder.Append(command.Name);
-                        foreach (ParameterInfo param in command.Parameters)
+                        foreach (Discord.Commands.ParameterInfo param in command.Parameters)
                         {
                             builder.Append(" *" + param.Name + "*");
                         }
@@ -98,6 +133,99 @@ namespace Tournabot
                     builder.Append("```");
                 }
                 await Context.Channel.SendMessageAsync(builder.Length == 0 ? "N/A" : builder.ToString());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("scrim", RunMode = RunMode.Async)]
+        [Summary("Start A Scrim")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Scrim(string region = "0", string tolerance = "7")
+        {
+            string message;
+            int realTolerance;
+            IUserMessage announcement;
+            IDMChannel dmChannel;
+            try
+            {
+                if (region == "0")
+                {
+                    region = await program.FindRegion(Context.User.Id);
+                }
+                if(region != "NA" && region != "WE" && region != "EU")
+                {
+                    dmChannel = await Context.User.GetOrCreateDMChannelAsync();
+                    await dmChannel.SendMessageAsync("The region selected doesn't make sense. You chose (or defaulted to): " + region + " when \"NA\" \"WE\" or \"EU\" were expected.");
+                    return;
+                }
+
+                if(!Int32.TryParse(tolerance, out realTolerance) || realTolerance < 2 || realTolerance > 10)
+                {
+                    dmChannel = await Context.User.GetOrCreateDMChannelAsync();
+                    await dmChannel.SendMessageAsync("The tolerance of " + realTolerance + " players doesn\'t work. Please set a tolerance between 2 and 10 or don't set one yourself. (The default will be a 7 player tolerance)");
+                    return;
+                }
+                announcement = await Context.Guild.GetTextChannel(config.GetScrimChannel()).SendMessageAsync(Context.Guild.GetRole(529397215203164192).Mention + " A scrim is starting soon for " 
+                    + region + "! React to the ✅ below to join as a player, or react to the 🤖 to be the director!");
+                var emote1 = new Emoji("✅");
+                var emote2 = new Emoji("🤖");
+                message = await program.CreateScrim(Context.User.Id, region, realTolerance, announcement.Id);
+                dmChannel = await Context.User.GetOrCreateDMChannelAsync();
+                await dmChannel.SendMessageAsync(message);
+                await Context.Message.DeleteAsync();
+                await announcement.AddReactionAsync(emote1);
+                await announcement.AddReactionAsync(emote2);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("start", RunMode = RunMode.Async)]
+        [Summary("Begin A Scrim")]
+        [RequireContext(ContextType.DM)]
+        public async Task Start()
+        {
+            try
+            {
+                await program.StartScrim(Context.User.Id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("code", RunMode = RunMode.Async)]
+        [Summary("Enter Scrim Code")]
+        [RequireContext(ContextType.DM)]
+        public async Task Code(string code)
+        {
+            try
+            {
+                var message = await program.ScrimCode(Context.User.Id, code);
+                var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
+                await dmChannel.SendMessageAsync(message);
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("end", RunMode = RunMode.Async)]
+        [Summary("End A Scrim")]
+        [RequireContext(ContextType.DM)]
+        public async Task End()
+        {
+            try
+            {
+                await program.RemoveScrimInstance(Context.User.Id);
             }
             catch (Exception ex)
             {
@@ -150,11 +278,95 @@ namespace Tournabot
         public async Task RegionMessage([Remainder] string text)
         {
             var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text);
-            var emoteUS = new Emoji("🇺🇸");
+            var emoteEast = new Emoji("🇺🇸");
             var emoteEU = new Emoji("🇪🇺");
-            await message.AddReactionAsync(emoteUS);
+            var emoteWest = new Emoji("🇼");
+            await message.AddReactionAsync(emoteEast);
+            await message.AddReactionAsync(emoteWest);
             await message.AddReactionAsync(emoteEU);
             config.SaveRegionMessage(message);
+        }
+
+        [Command("refreshRegions", RunMode = RunMode.Async)]
+        [Summary("Refresh all region reactions")]
+        [RequireContext(ContextType.Guild)]
+        public async Task RefreshRegions()
+        {
+            var emoteEast = new Emoji("🇺🇸");
+            var emoteEU = new Emoji("🇪🇺");
+            var emoteWest = new Emoji("🇼");
+            var regionMessage = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).GetMessageAsync(config.GetRegionMessage()) as RestUserMessage;
+            if (regionMessage == null)
+            {
+                await Context.Channel.SendMessageAsync("Cannot find region message!");
+                return;
+            }
+            var reactionsEast = await regionMessage.GetReactionUsersAsync(emoteEast, 1000).FlattenAsync();
+            var reactionsEU = await regionMessage.GetReactionUsersAsync(emoteEU, 1000).FlattenAsync();
+            var reactionsWest = await regionMessage.GetReactionUsersAsync(emoteWest, 1000).FlattenAsync();
+            var message = await program.RefreshRegionSelection(reactionsEast, reactionsEU, reactionsWest);
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("refreshSignUps", RunMode = RunMode.Async)]
+        [Summary("Refresh all sign up reactions")]
+        [RequireContext(ContextType.Guild)]
+        public async Task RefreshSignUps()
+        {
+            var emote = new Emoji("✅");
+            var signUpMessage = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).GetMessageAsync(config.GetSignUpMessage()) as RestUserMessage;
+            if (signUpMessage == null)
+            {
+                await Context.Channel.SendMessageAsync("Cannot find sign up message!");
+                return;
+            }
+            var reactions = await signUpMessage.GetReactionUsersAsync(emote, 1000).FlattenAsync();
+            var message = await program.RefreshSignUpSelection(reactions);
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("refreshCheckIns", RunMode = RunMode.Async)]
+        [Summary("Refresh all check in reactions")]
+        [RequireContext(ContextType.Guild)]
+        public async Task RefreshCheckIns()
+        {
+            var emote = new Emoji("✅");
+            var checkInMessage = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).GetMessageAsync(config.GetCheckInMessage()) as RestUserMessage;
+            if (checkInMessage == null)
+            {
+                await Context.Channel.SendMessageAsync("Cannot find check in message!");
+                return;
+            }
+            var reactions = await checkInMessage.GetReactionUsersAsync(emote, 1000).FlattenAsync();
+            var message = await program.RefreshCheckInSelection(reactions);
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("addSignUp", RunMode = RunMode.Async)]
+        [Summary("Add Sign Up for a user")]
+        [RequireContext(ContextType.Guild)]
+        public async Task AddSignUp(ulong id)
+        {
+            var message = await program.AddMemberSignUp(id);
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("addCheckIn", RunMode = RunMode.Async)]
+        [Summary("Add Sign Up for a user")]
+        [RequireContext(ContextType.Guild)]
+        public async Task AddCheckIn(ulong id)
+        {
+            var message = await program.AddMemberCheckIn(id);
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("checkStatus", RunMode = RunMode.Async)]
+        [Summary("Check status of member")]
+        [RequireContext(ContextType.Guild)]
+        public async Task Status(ulong id)
+        {
+            var message = await program.GetMember(id);
+            await Context.Channel.SendMessageAsync(message);
         }
 
         [Command("clearSignUps", RunMode = RunMode.Async)]
@@ -273,22 +485,16 @@ namespace Tournabot
         [RequireContext(ContextType.Guild)]
         public async Task CreateBrackets()
         {
-            var roles = new List<IRole>
+            var message = await program.CreateBrackets();
+
+            while (message.Length >= 1800)
             {
-                Context.Guild.GetRole(config.GetMatchARole()),
-                Context.Guild.GetRole(config.GetMatchBRole()),
-                Context.Guild.GetRole(config.GetMatchCRole()),
-                Context.Guild.GetRole(config.GetMatchDRole()),
-                Context.Guild.GetRole(config.GetMatchERole()),
-                Context.Guild.GetRole(config.GetMatchFRole()),
-                Context.Guild.GetRole(config.GetMatchGRole()),
-                Context.Guild.GetRole(config.GetMatchHRole()),
-                Context.Guild.GetRole(config.GetMatchIRole()),
-                Context.Guild.GetRole(config.GetMatchJRole()),
-                Context.Guild.GetRole(config.GetFinalistRole())
-            };
-            var message = await program.CreateBrackets(roles);
-            await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(message);
+                var miniMessage = message.Substring(0, 1800);
+                await Context.Channel.SendMessageAsync(miniMessage);//await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(miniMessage);//UNCOMMENT
+                message = message.Substring(1800);
+            }
+
+            await Context.Channel.SendMessageAsync(message);//await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(message);//UNCOMMENT
         }
 
         [Command("calculateScores", RunMode = RunMode.Async)]
@@ -354,6 +560,24 @@ namespace Tournabot
                      await Context.Channel.DeleteMessageAsync(y.Id);
                  }
              });
+        }
+
+        [Command("verify", RunMode = RunMode.Async)]
+        [Summary("Find members who aren't registered")]
+        [RequireContext(ContextType.DM)]
+        public async Task Verify()
+        {
+            var message = await program.Verify();
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("rebuild", RunMode = RunMode.Async)]
+        [Summary("Rebuild members who aren't registered")]
+        [RequireContext(ContextType.DM)]
+        public async Task Rebuild()
+        {
+            var message = await program.Rebuild();
+            await Context.Channel.SendMessageAsync(message);
         }
     }
 
