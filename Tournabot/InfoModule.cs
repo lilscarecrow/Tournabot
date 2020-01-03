@@ -242,9 +242,25 @@ namespace Tournabot
         [Command("signUpMessage", RunMode = RunMode.Async)]
         [Summary("Set the message for signups")]
         [RequireContext(ContextType.Guild)]
-        public async Task SignUpMessage([Remainder] string text)
+        public async Task SignUpMessage(string signupImage, string tournamentDateMonth, string tournamentDateDay, string tournamentDateTime, [Remainder] string text)
         {
-            var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text);
+            var signupBuilder = new EmbedBuilder()
+                    .WithTitle("We are happy to annouce another tournament!")
+                    .WithDescription(text)
+                    .WithColor(new Color(0x97400))
+                    .WithImageUrl(signupImage)
+                    .WithAuthor(author => {
+                        author
+                            .WithName("Sign-ups are now OPEN!")
+                            .WithIconUrl("https://i.imgur.com/YYatELp.png");
+                    })
+                    .AddField("Rules and Info", "All rules and info is located in the tournament-rules channel.")
+                    .AddField("Tournament Date", tournamentDateMonth + " " + tournamentDateDay + " at " + tournamentDateTime + " EST")
+                    .AddField("Click the ✅ to sign up.", "Remember to select your region.")
+                    .AddField("If not already registered", "In a dm with the bot do !join <your name> like !join lilscarerow");
+            var signupEmbed = signupBuilder.Build();
+
+            var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(embed: signupEmbed);
             var emote = new Emoji("✅");
             await message.AddReactionAsync(emote);
             config.SaveSignUpMessage(message);
