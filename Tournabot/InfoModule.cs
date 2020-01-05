@@ -167,7 +167,7 @@ namespace Tournabot
                     .AddField("If not already registered", "In a dm with the bot do !join <your name> like !join lilscarerow");
             var signupEmbed = signupBuilder.Build();
 
-            var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(embed: signupEmbed);
+            var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text: Context.Guild.EveryoneRole.Mention, embed: signupEmbed);
             var emote = new Emoji("✅");
             await message.AddReactionAsync(emote);
             config.SaveSignUpMessage(message);

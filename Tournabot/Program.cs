@@ -239,7 +239,7 @@ namespace Tournabot
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetEastScrimChannel()) as SocketTextChannel;
-                        var signUpMessage = await chan.SendMessageAsync(embed: builder);
+                        var signUpMessage = await chan.SendMessageAsync(text: guild.EveryoneRole.Mention, embed: builder);
                         services.GetService<ConfigHandler>().SetEastScrimMessage(signUpMessage.Id);
                         var emote = new Emoji("✅");
                         await signUpMessage.AddReactionAsync(emote);
@@ -277,7 +277,7 @@ namespace Tournabot
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetEUScrimChannel()) as SocketTextChannel;
-                        var signUpMessage = await chan.SendMessageAsync(embed: builder);
+                        var signUpMessage = await chan.SendMessageAsync(text: guild.EveryoneRole.Mention, embed: builder);
                         services.GetService<ConfigHandler>().SetEUScrimMessage(signUpMessage.Id);
                         var emote = new Emoji("✅");
                         await signUpMessage.AddReactionAsync(emote);
@@ -315,7 +315,7 @@ namespace Tournabot
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetWestScrimChannel()) as SocketTextChannel;
-                        var signUpMessage = await chan.SendMessageAsync(embed: builder);
+                        var signUpMessage = await chan.SendMessageAsync(text: guild.EveryoneRole.Mention, embed: builder);
                         services.GetService<ConfigHandler>().SetWestScrimMessage(signUpMessage.Id);
                         var emote = new Emoji("✅");
                         await signUpMessage.AddReactionAsync(emote);
@@ -353,7 +353,7 @@ namespace Tournabot
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetSAScrimChannel()) as SocketTextChannel;
-                        var signUpMessage = await chan.SendMessageAsync(embed: builder);
+                        var signUpMessage = await chan.SendMessageAsync(text: guild.EveryoneRole.Mention, embed: builder);
                         services.GetService<ConfigHandler>().SetSAScrimMessage(signUpMessage.Id);
                         var emote = new Emoji("✅");
                         await signUpMessage.AddReactionAsync(emote);
@@ -391,7 +391,7 @@ namespace Tournabot
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetSPScrimChannel()) as SocketTextChannel;
-                        var signUpMessage = await chan.SendMessageAsync(embed: builder);
+                        var signUpMessage = await chan.SendMessageAsync(text: guild.EveryoneRole.Mention, embed: builder);
                         services.GetService<ConfigHandler>().SetSPScrimMessage(signUpMessage.Id);
                         var emote = new Emoji("✅");
                         await signUpMessage.AddReactionAsync(emote);
@@ -429,7 +429,7 @@ namespace Tournabot
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetAUScrimChannel()) as SocketTextChannel;
-                        var signUpMessage = await chan.SendMessageAsync(embed: builder);
+                        var signUpMessage = await chan.SendMessageAsync(text: guild.EveryoneRole.Mention, embed: builder);
                         services.GetService<ConfigHandler>().SetAUScrimMessage(signUpMessage.Id);
                         var emote = new Emoji("✅");
                         await signUpMessage.AddReactionAsync(emote);
