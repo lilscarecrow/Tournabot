@@ -139,99 +139,6 @@ namespace Tournabot
                 Console.WriteLine(ex.Message);
             }
         }
-
-        [Command("scrim", RunMode = RunMode.Async)]
-        [Summary("Start A Scrim")]
-        [RequireContext(ContextType.Guild)]
-        public async Task Scrim(string region = "0", string tolerance = "7")
-        {
-            string message;
-            int realTolerance;
-            IUserMessage announcement;
-            IDMChannel dmChannel;
-            try
-            {
-                if (region == "0")
-                {
-                    region = await program.FindRegion(Context.User.Id);
-                }
-                if(region != "NA" && region != "WE" && region != "EU")
-                {
-                    dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-                    await dmChannel.SendMessageAsync("The region selected doesn't make sense. You chose (or defaulted to): " + region + " when \"NA\" \"WE\" or \"EU\" were expected.");
-                    return;
-                }
-
-                if(!Int32.TryParse(tolerance, out realTolerance) || realTolerance < 2 || realTolerance > 10)
-                {
-                    dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-                    await dmChannel.SendMessageAsync("The tolerance of " + realTolerance + " players doesn\'t work. Please set a tolerance between 2 and 10 or don't set one yourself. (The default will be a 7 player tolerance)");
-                    return;
-                }
-                announcement = await Context.Guild.GetTextChannel(config.GetScrimChannel()).SendMessageAsync(Context.Guild.GetRole(529397215203164192).Mention + " A scrim is starting soon for " 
-                    + region + "! React to the ✅ below to join as a player, or react to the 🤖 to be the director!");
-                var emote1 = new Emoji("✅");
-                var emote2 = new Emoji("🤖");
-                message = await program.CreateScrim(Context.User.Id, region, realTolerance, announcement.Id);
-                dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-                await dmChannel.SendMessageAsync(message);
-                await Context.Message.DeleteAsync();
-                await announcement.AddReactionAsync(emote1);
-                await announcement.AddReactionAsync(emote2);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        [Command("start", RunMode = RunMode.Async)]
-        [Summary("Begin A Scrim")]
-        [RequireContext(ContextType.DM)]
-        public async Task Start()
-        {
-            try
-            {
-                await program.StartScrim(Context.User.Id);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        [Command("code", RunMode = RunMode.Async)]
-        [Summary("Enter Scrim Code")]
-        [RequireContext(ContextType.DM)]
-        public async Task Code(string code)
-        {
-            try
-            {
-                var message = await program.ScrimCode(Context.User.Id, code);
-                var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-                await dmChannel.SendMessageAsync(message);
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        [Command("end", RunMode = RunMode.Async)]
-        [Summary("End A Scrim")]
-        [RequireContext(ContextType.DM)]
-        public async Task End()
-        {
-            try
-            {
-                await program.RemoveScrimInstance(Context.User.Id);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
     }
 
     [Admin]
@@ -275,15 +182,29 @@ namespace Tournabot
         [Command("regionMessage", RunMode = RunMode.Async)]
         [Summary("Set the message for regions")]
         [RequireContext(ContextType.Guild)]
-        public async Task RegionMessage([Remainder] string text)
+        public async Task RegionMessage()
         {
-            var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text);
+            var regionBuilder = new EmbedBuilder()
+                .WithTitle("Region Assignment")
+                .WithDescription("Click the rection corresponding to your region.\nThis will allow us to know what region you're\nfrom for tournaments " +
+                "(Note: Not all tournaments\nwill use regions for creating brackets.)\n\n🇺🇸 East\n <:cali:663097025033666560> West\n🇪🇺 EU\n🇧🇷 SA\n🇦🇺 OCE" +
+                "\n🇸🇬 SP\n\nIf the bot tells you that you aren't registered, you\n must do the !join name command in the dms with\n the bot first. If the" +
+                " bot doesn't message you at all, \ndm lilscarecrow directly.")
+                .WithThumbnailUrl("https://img.icons8.com/cotton/2x/globe.png")
+                .WithColor(new Color(0x202225)).Build();
+            var message = await Context.Guild.GetTextChannel(config.GetRegionChannel()).SendMessageAsync(embed:regionBuilder);
             var emoteEast = new Emoji("🇺🇸");
             var emoteEU = new Emoji("🇪🇺");
-            var emoteWest = new Emoji("🇼");
+            var emoteSA = new Emoji("🇧🇷");
+            var emoteSP = new Emoji("🇸🇬");
+            var emoteAU = new Emoji("🇦🇺");
+            var emoteWest = Emote.Parse("<:cali:663097025033666560>");
             await message.AddReactionAsync(emoteEast);
             await message.AddReactionAsync(emoteWest);
             await message.AddReactionAsync(emoteEU);
+            await message.AddReactionAsync(emoteSA);
+            await message.AddReactionAsync(emoteAU);
+            await message.AddReactionAsync(emoteSP);
             config.SaveRegionMessage(message);
         }
 
@@ -564,7 +485,7 @@ namespace Tournabot
 
         [Command("verify", RunMode = RunMode.Async)]
         [Summary("Find members who aren't registered")]
-        [RequireContext(ContextType.DM)]
+        [RequireContext(ContextType.Guild)]
         public async Task Verify()
         {
             var message = await program.Verify();
@@ -573,11 +494,183 @@ namespace Tournabot
 
         [Command("rebuild", RunMode = RunMode.Async)]
         [Summary("Rebuild members who aren't registered")]
-        [RequireContext(ContextType.DM)]
+        [RequireContext(ContextType.Guild)]
         public async Task Rebuild()
         {
             var message = await program.Rebuild();
             await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setEastRole", RunMode = RunMode.Async)]
+        [Summary("Set East scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetEastRole(ulong id)
+        {
+            config.SetEastScrimRole(id);
+            var message = "Id set for East scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setWestRole", RunMode = RunMode.Async)]
+        [Summary("Set West scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetWestRole(ulong id)
+        {
+            config.SetWestScrimRole(id);
+            var message = "Id set for West scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setEURole", RunMode = RunMode.Async)]
+        [Summary("Set EU scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetEURole(ulong id)
+        {
+            config.SetEUScrimRole(id);
+            var message = "Id set for EU scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setSARole", RunMode = RunMode.Async)]
+        [Summary("Set SA scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetSARole(ulong id)
+        {
+            config.SetSAScrimRole(id);
+            var message = "Id set for SA scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setSPRole", RunMode = RunMode.Async)]
+        [Summary("Set SP scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetSPRole(ulong id)
+        {
+            config.SetSPScrimRole(id);
+            var message = "Id set for SP scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setAURole", RunMode = RunMode.Async)]
+        [Summary("Set AU scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetAURole(ulong id)
+        {
+            config.SetAUScrimRole(id);
+            var message = "Id set for AU scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setEastActiveRole", RunMode = RunMode.Async)]
+        [Summary("Set East Active scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetEastActiveRole(ulong id)
+        {
+            config.SetEastScrimActiveRole(id);
+            var message = "Id set for East Active scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setWestActiveRole", RunMode = RunMode.Async)]
+        [Summary("Set West Active scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetWestActiveRole(ulong id)
+        {
+            config.SetWestScrimActiveRole(id);
+            var message = "Id set for West Active scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setEUActiveRole", RunMode = RunMode.Async)]
+        [Summary("Set EU Active scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetEUActiveRole(ulong id)
+        {
+            config.SetEUScrimActiveRole(id);
+            var message = "Id set for EU Active scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setSAActiveRole", RunMode = RunMode.Async)]
+        [Summary("Set SA scrim Active role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetSAActiveRole(ulong id)
+        {
+            config.SetSAScrimActiveRole(id);
+            var message = "Id set for SA Active scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setSPActiveRole", RunMode = RunMode.Async)]
+        [Summary("Set SP Active scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetSPActiveRole(ulong id)
+        {
+            config.SetSPScrimActiveRole(id);
+            var message = "Id set for SP Active scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("setAUActiveRole", RunMode = RunMode.Async)]
+        [Summary("Set AU Active scrim role")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetAUActiveRole(ulong id)
+        {
+            config.SetAUScrimActiveRole(id);
+            var message = "Id set for AU Active scrim role";
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("getGuildInfo", RunMode = RunMode.Async)]
+        [Summary("Gets info about roles")]
+        [RequireContext(ContextType.Guild)]
+        public async Task GetGuildInfo()
+        {
+            var message = await program.GuildInfo();
+            await Context.Channel.SendMessageAsync(message);
+        }
+
+        [Command("scrimDashboard", RunMode = RunMode.Async)]
+        [Summary("Set the message for the dashboard")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ScrimDashboard()
+        {
+            var builder = new EmbedBuilder()
+                .WithTitle("Scrim Dashboard")
+                .WithDescription("Click the region you would like to start a scrim for.\n :flag_us: EAST: \n <:cali:663097025033666560> WEST: " +
+                "\n :flag_eu: EU: \n :flag_br: SA: \n :flag_au: OCE: \n :flag_sg: SP: ")
+                .WithColor(new Color(0xF5FF))
+                .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
+            var message = await Context.Guild.GetTextChannel(config.GetScrimAdminChannel()).SendMessageAsync(embed: builder);
+            var emoteEast = new Emoji("🇺🇸");
+            var emoteEU = new Emoji("🇪🇺");
+            var emoteSA = new Emoji("🇧🇷");
+            var emoteSP = new Emoji("🇸🇬");
+            var emoteAU = new Emoji("🇦🇺");
+            var emoteWest = Emote.Parse("<:cali:663097025033666560>");
+            await message.AddReactionAsync(emoteEast);
+            await message.AddReactionAsync(emoteWest);
+            await message.AddReactionAsync(emoteEU);
+            await message.AddReactionAsync(emoteSA);
+            await message.AddReactionAsync(emoteAU);
+            await message.AddReactionAsync(emoteSP);
+            config.SaveDashboardMessage(message);
+        }
+
+        [Command("scrimSignUpMessage", RunMode = RunMode.Async)]
+        [Summary("Set the message for the scrim sign ups")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ScrimSignUpMessage()
+        {
+            var builder = new EmbedBuilder()
+                .WithTitle("Scrim Role Assignment")
+                .WithDescription("Click the :white_check_mark: to get access to scrims.")
+                .WithColor(new Color(0xB88E00))
+                .WithThumbnailUrl("https://i.imgur.com/hJU393s.png").Build();
+            var message = await Context.Guild.GetTextChannel(config.GetScrimChannel()).SendMessageAsync(embed: builder);
+            var emote = new Emoji("✅");
+            await message.AddReactionAsync(emote);
+            config.SaveScrimMessage(message);
         }
     }
 
