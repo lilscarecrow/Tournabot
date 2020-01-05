@@ -36,12 +36,12 @@ namespace Tournabot
         private IServiceProvider services;
         private List<List<string>> playerList = new List<List<string>>();
         private Queue<(ulong, ulong, bool)> roleQueue = new Queue<(ulong, ulong, bool)>();
-        private string EastScrimAdmin = null;
-        private string WestScrimAdmin = null;
-        private string EUScrimAdmin = null;
-        private string SAScrimAdmin = null;
-        private string SPScrimAdmin = null;
-        private string AUScrimAdmin = null;
+        private string EastScrimAdmin = "";
+        private string WestScrimAdmin = "";
+        private string EUScrimAdmin = "";
+        private string SAScrimAdmin = "";
+        private string SPScrimAdmin = "";
+        private string AUScrimAdmin = "";
         private SocketGuild guild;
 
         public static void Main(string[] args)
@@ -72,7 +72,7 @@ namespace Tournabot
 
             await client.LoginAsync(TokenType.Bot, services.GetService<ConfigHandler>().GetToken());
             await client.StartAsync();
-            guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+            
             await Task.Delay(-1);
         }
 
@@ -83,7 +83,11 @@ namespace Tournabot
 
         private async void AddReactions(object source, ElapsedEventArgs e)
         {
-            for(int i = 0; i < 3; i++)
+            if(guild == null)
+            {
+                guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+            }
+            for (int i = 0; i < 3; i++)
             {
                 if(roleQueue.Count() > 0)
                 {
@@ -208,9 +212,10 @@ namespace Tournabot
                 var user = await channel.GetUserAsync(reaction.UserId);
                 if (reaction.Emote.Name == "🇺🇸")
                 {
-                    if(EastScrimAdmin != null)
+                    if(EastScrimAdmin != "")
                     {
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         var dmChannel = await user.GetOrCreateDMChannelAsync();
                         await dmChannel.SendMessageAsync("Scrim is already running with Scrim Admin: " + EastScrimAdmin);
                     }
@@ -223,8 +228,11 @@ namespace Tournabot
                             $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                             .WithColor(new Color(0xF5FF))
                             .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                        await message.Value.ModifyAsync(x => x.Embed = builder);
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                        var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                        await dashboardMessage.ModifyAsync(x => x.Embed = builder);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
                             .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
@@ -242,9 +250,10 @@ namespace Tournabot
                 }
                 else if (reaction.Emote.Name == "🇪🇺")
                 {
-                    if (EUScrimAdmin != null)
+                    if (EUScrimAdmin != "")
                     {
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         var dmChannel = await user.GetOrCreateDMChannelAsync();
                         await dmChannel.SendMessageAsync("Scrim is already running with Scrim Admin: " + EUScrimAdmin);
                     }
@@ -257,8 +266,11 @@ namespace Tournabot
                             $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                             .WithColor(new Color(0xF5FF))
                             .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                        await message.Value.ModifyAsync(x => x.Embed = builder);
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                        var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                        await dashboardMessage.ModifyAsync(x => x.Embed = builder);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
                             .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
@@ -276,9 +288,10 @@ namespace Tournabot
                 }
                 else if (reaction.Emote.Name == "cali")
                 {
-                    if (WestScrimAdmin != null)
+                    if (WestScrimAdmin != "")
                     {
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         var dmChannel = await user.GetOrCreateDMChannelAsync();
                         await dmChannel.SendMessageAsync("Scrim is already running with Scrim Admin: " + WestScrimAdmin);
                     }
@@ -291,8 +304,11 @@ namespace Tournabot
                             $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                             .WithColor(new Color(0xF5FF))
                             .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                        await message.Value.ModifyAsync(x => x.Embed = builder);
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                        var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                        await dashboardMessage.ModifyAsync(x => x.Embed = builder);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
                             .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
@@ -310,9 +326,10 @@ namespace Tournabot
                 }
                 else if (reaction.Emote.Name == "🇧🇷")
                 {
-                    if (SAScrimAdmin != null)
+                    if (SAScrimAdmin != "")
                     {
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         var dmChannel = await user.GetOrCreateDMChannelAsync();
                         await dmChannel.SendMessageAsync("Scrim is already running with Scrim Admin: " + SAScrimAdmin);
                     }
@@ -325,8 +342,11 @@ namespace Tournabot
                             $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                             .WithColor(new Color(0xF5FF))
                             .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                        await message.Value.ModifyAsync(x => x.Embed = builder);
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                        var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                        await dashboardMessage.ModifyAsync(x => x.Embed = builder);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
                             .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
@@ -344,9 +364,10 @@ namespace Tournabot
                 }
                 else if (reaction.Emote.Name == "🇸🇬")
                 {
-                    if (SPScrimAdmin != null)
+                    if (SPScrimAdmin != "")
                     {
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         var dmChannel = await user.GetOrCreateDMChannelAsync();
                         await dmChannel.SendMessageAsync("Scrim is already running with Scrim Admin: " + SPScrimAdmin);
                     }
@@ -359,8 +380,11 @@ namespace Tournabot
                             $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                             .WithColor(new Color(0xF5FF))
                             .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                        await message.Value.ModifyAsync(x => x.Embed = builder);
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                        var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                        await dashboardMessage.ModifyAsync(x => x.Embed = builder);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
                             .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
@@ -378,9 +402,10 @@ namespace Tournabot
                 }
                 else if (reaction.Emote.Name == "🇦🇺")
                 {
-                    if (AUScrimAdmin != null)
+                    if (AUScrimAdmin != "")
                     {
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         var dmChannel = await user.GetOrCreateDMChannelAsync();
                         await dmChannel.SendMessageAsync("Scrim is already running with Scrim Admin: " + AUScrimAdmin);
                     }
@@ -393,8 +418,11 @@ namespace Tournabot
                             $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                             .WithColor(new Color(0xF5FF))
                             .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                        await message.Value.ModifyAsync(x => x.Embed = builder);
-                        await reaction.Message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                        var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                        var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                        await dashboardMessage.ModifyAsync(x => x.Embed = builder);
+                        var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
+                        await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
                             .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
@@ -433,14 +461,15 @@ namespace Tournabot
                     {
                         roleQueue.Enqueue((user.Id, activeRole.Id, false));
                     }
-                    EastScrimAdmin = null;
+                    EastScrimAdmin = "";
                     var builder = new EmbedBuilder()
                         .WithTitle("Scrim Dashboard")
                         .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {EastScrimAdmin}\n <:cali:663097025033666560> WEST: {WestScrimAdmin}" +
                         $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                         .WithColor(new Color(0xF5FF))
                         .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                    var dashboardMessage = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                    var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                    var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
             }
@@ -466,14 +495,15 @@ namespace Tournabot
                     {
                         roleQueue.Enqueue((user.Id, activeRole.Id, false));
                     }
-                    WestScrimAdmin = null;
+                    WestScrimAdmin = "";
                     var builder = new EmbedBuilder()
                         .WithTitle("Scrim Dashboard")
                         .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {EastScrimAdmin}\n <:cali:663097025033666560> WEST: {WestScrimAdmin}" +
                         $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                         .WithColor(new Color(0xF5FF))
                         .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                    var dashboardMessage = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                    var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                    var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
             }
@@ -499,14 +529,15 @@ namespace Tournabot
                     {
                         roleQueue.Enqueue((user.Id, activeRole.Id, false));
                     }
-                    EUScrimAdmin = null;
+                    EUScrimAdmin = "";
                     var builder = new EmbedBuilder()
                         .WithTitle("Scrim Dashboard")
                         .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {EastScrimAdmin}\n <:cali:663097025033666560> WEST: {WestScrimAdmin}" +
                         $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                         .WithColor(new Color(0xF5FF))
                         .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                    var dashboardMessage = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                    var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                    var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
             }
@@ -532,14 +563,15 @@ namespace Tournabot
                     {
                         roleQueue.Enqueue((user.Id, activeRole.Id, false));
                     }
-                    SAScrimAdmin = null;
+                    SAScrimAdmin = "";
                     var builder = new EmbedBuilder()
                         .WithTitle("Scrim Dashboard")
                         .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {EastScrimAdmin}\n <:cali:663097025033666560> WEST: {WestScrimAdmin}" +
                         $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                         .WithColor(new Color(0xF5FF))
                         .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                    var dashboardMessage = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                    var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                    var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
             }
@@ -565,14 +597,15 @@ namespace Tournabot
                     {
                         roleQueue.Enqueue((user.Id, activeRole.Id, false));
                     }
-                    SPScrimAdmin = null;
+                    SPScrimAdmin = "";
                     var builder = new EmbedBuilder()
                         .WithTitle("Scrim Dashboard")
                         .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {EastScrimAdmin}\n <:cali:663097025033666560> WEST: {WestScrimAdmin}" +
                         $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                         .WithColor(new Color(0xF5FF))
                         .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                    var dashboardMessage = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                    var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                    var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
             }
@@ -598,14 +631,15 @@ namespace Tournabot
                     {
                         roleQueue.Enqueue((user.Id, activeRole.Id, false));
                     }
-                    AUScrimAdmin = null;
+                    AUScrimAdmin = "";
                     var builder = new EmbedBuilder()
                         .WithTitle("Scrim Dashboard")
                         .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {EastScrimAdmin}\n <:cali:663097025033666560> WEST: {WestScrimAdmin}" +
                         $"\n :flag_eu: EU: {EUScrimAdmin}\n :flag_br: SA: {SAScrimAdmin}\n :flag_au: OCE: {AUScrimAdmin}\n :flag_sg: SP: {SPScrimAdmin}")
                         .WithColor(new Color(0xF5FF))
                         .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
-                    var dashboardMessage = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
+                    var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
+                    var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
             }
@@ -1800,6 +1834,7 @@ namespace Tournabot
                 var builder = new StringBuilder();
                 builder.Append("```\nUSERS SIGNED UP:");
                 var reactions = await signUpMessage.GetReactionUsersAsync(emote,21).FlattenAsync();//Max 20 for 2 sets
+                reactions = reactions.Reverse();
                 reactions = reactions.TakeLast(reactions.Count() - 1);//Removes the bot
                 if(reactions.Count() > 10 && reactions.Count() < 20)//Remove left over entries
                 {
