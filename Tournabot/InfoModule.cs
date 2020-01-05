@@ -189,7 +189,7 @@ namespace Tournabot
                 })
                 .AddField("Rules and Info", "All rules and info is located in the tournament-rules channel.")
                 .AddField("Tournament Time", tournamentDateTime + " EST")
-                .AddField("Click the ✅ to check in.", "⠀").build();
+                .AddField("Click the ✅ to check in.", "⠀").Build();
             var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text: Context.Guild.EveryoneRole.Mention, embed: checkinBuilder);
             var emote = new Emoji("✅");
             await message.AddReactionAsync(emote);

@@ -43,6 +43,13 @@ namespace Tournabot
         private string SPScrimAdmin = "";
         private string AUScrimAdmin = "";
         private SocketGuild guild;
+        private int maxScrim = 20;
+        private List<ulong> EastScrimTemp = new List<ulong>();
+        private List<ulong> WestScrimTemp = new List<ulong>();
+        private List<ulong> EUScrimTemp = new List<ulong>();
+        private List<ulong> SAScrimTemp = new List<ulong>();
+        private List<ulong> SPScrimTemp = new List<ulong>();
+        private List<ulong> AUScrimTemp = new List<ulong>();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
@@ -235,7 +242,9 @@ namespace Tournabot
                         await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
-                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
+                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers:" +
+                            "\nclick the <:start:663144594401132603> to start the scrim with FULL lobbies." +
+                            "\nclick the <:manual_start:663450072834375720> to start the scrim with PARTIAL lobbies.")
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetEastScrimChannel()) as SocketTextChannel;
@@ -246,6 +255,9 @@ namespace Tournabot
                         await Task.Delay(10000);
                         var emote2 = Emote.Parse("<:start:663144594401132603>");
                         await signUpMessage.AddReactionAsync(emote2);
+                        await Task.Delay(500);
+                        var emote3 = Emote.Parse("<:manual_start:663450072834375720>");
+                        await signUpMessage.AddReactionAsync(emote3);
                     }
                 }
                 else if (reaction.Emote.Name == "🇪🇺")
@@ -273,7 +285,9 @@ namespace Tournabot
                         await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
-                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
+                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers:" +
+                            "\nclick the <:start:663144594401132603> to start the scrim with FULL lobbies." +
+                            "\nclick the <:manual_start:663450072834375720> to start the scrim with PARTIAL lobbies.")
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetEUScrimChannel()) as SocketTextChannel;
@@ -284,6 +298,9 @@ namespace Tournabot
                         await Task.Delay(10000);
                         var emote2 = Emote.Parse("<:start:663144594401132603>");
                         await signUpMessage.AddReactionAsync(emote2);
+                        await Task.Delay(500);
+                        var emote3 = Emote.Parse("<:manual_start:663450072834375720>");
+                        await signUpMessage.AddReactionAsync(emote3);
                     }
                 }
                 else if (reaction.Emote.Name == "cali")
@@ -311,7 +328,9 @@ namespace Tournabot
                         await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
-                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
+                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers:" +
+                            "\nclick the <:start:663144594401132603> to start the scrim with FULL lobbies." +
+                            "\nclick the <:manual_start:663450072834375720> to start the scrim with PARTIAL lobbies.")
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetWestScrimChannel()) as SocketTextChannel;
@@ -322,6 +341,9 @@ namespace Tournabot
                         await Task.Delay(10000);
                         var emote2 = Emote.Parse("<:start:663144594401132603>");
                         await signUpMessage.AddReactionAsync(emote2);
+                        await Task.Delay(500);
+                        var emote3 = Emote.Parse("<:manual_start:663450072834375720>");
+                        await signUpMessage.AddReactionAsync(emote3);
                     }
                 }
                 else if (reaction.Emote.Name == "🇧🇷")
@@ -349,7 +371,9 @@ namespace Tournabot
                         await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
-                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
+                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers:" +
+                            "\nclick the <:start:663144594401132603> to start the scrim with FULL lobbies." +
+                            "\nclick the <:manual_start:663450072834375720> to start the scrim with PARTIAL lobbies.")
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetSAScrimChannel()) as SocketTextChannel;
@@ -360,6 +384,9 @@ namespace Tournabot
                         await Task.Delay(10000);
                         var emote2 = Emote.Parse("<:start:663144594401132603>");
                         await signUpMessage.AddReactionAsync(emote2);
+                        await Task.Delay(500);
+                        var emote3 = Emote.Parse("<:manual_start:663450072834375720>");
+                        await signUpMessage.AddReactionAsync(emote3);
                     }
                 }
                 else if (reaction.Emote.Name == "🇸🇬")
@@ -387,7 +414,9 @@ namespace Tournabot
                         await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
-                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
+                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers:" +
+                            "\nclick the <:start:663144594401132603> to start the scrim with FULL lobbies." +
+                            "\nclick the <:manual_start:663450072834375720> to start the scrim with PARTIAL lobbies.")
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetSPScrimChannel()) as SocketTextChannel;
@@ -398,6 +427,9 @@ namespace Tournabot
                         await Task.Delay(10000);
                         var emote2 = Emote.Parse("<:start:663144594401132603>");
                         await signUpMessage.AddReactionAsync(emote2);
+                        await Task.Delay(500);
+                        var emote3 = Emote.Parse("<:manual_start:663450072834375720>");
+                        await signUpMessage.AddReactionAsync(emote3);
                     }
                 }
                 else if (reaction.Emote.Name == "🇦🇺")
@@ -425,7 +457,9 @@ namespace Tournabot
                         await messId.RemoveReactionAsync(reaction.Emote, user);
                         builder = new EmbedBuilder()
                             .WithTitle("Scrim Signup")
-                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers: click the <:start:663144594401132603> to start the scrim.")
+                            .WithDescription("Click the :white_check_mark: to sign up for the next set!! \n\n\n For Scrim Organizers:" +
+                            "\nclick the <:start:663144594401132603> to start the scrim with FULL lobbies." +
+                            "\nclick the <:manual_start:663450072834375720> to start the scrim with PARTIAL lobbies.")
                             .WithColor(new Color(0xD3FF))
                             .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                         var chan = client.GetChannel(services.GetService<ConfigHandler>().GetAUScrimChannel()) as SocketTextChannel;
@@ -436,6 +470,9 @@ namespace Tournabot
                         await Task.Delay(10000);
                         var emote2 = Emote.Parse("<:start:663144594401132603>");
                         await signUpMessage.AddReactionAsync(emote2);
+                        await Task.Delay(500);
+                        var emote3 = Emote.Parse("<:manual_start:663450072834375720>");
+                        await signUpMessage.AddReactionAsync(emote3);
                     }
                 }
             }
@@ -445,7 +482,20 @@ namespace Tournabot
                 {
                     var user = await channel.GetUserAsync(reaction.UserId);
                     var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEastScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEastScrimMessage()) as IUserMessage;
-                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetEastScrimActiveRole());
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetEastScrimActiveRole(), EastScrimTemp, "EAST", false);
+                    EastScrimTemp.Clear();
+                    if (dmMessage != "")
+                    {
+                        var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                }
+                else if (reaction.Emote.Name == "manual_start")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEastScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEastScrimMessage()) as IUserMessage;
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetEastScrimActiveRole(), EastScrimTemp, "EAST", true);
+                    EastScrimTemp.Clear();
                     if (dmMessage != "")
                     {
                         var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
@@ -472,6 +522,17 @@ namespace Tournabot
                     var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
+                else if (reaction.Emote.Name == "✅")
+                {
+                    if (!EastScrimTemp.Contains(reaction.UserId) && !reaction.User.Value.IsBot && EastScrimTemp.Count() < maxScrim)
+                        EastScrimTemp.Add(reaction.UserId);
+                    if (EastScrimTemp.Count() == maxScrim)
+                    {
+                        var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEastScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEastScrimMessage()) as IUserMessage;
+                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetEastScrimActiveRole(), EastScrimTemp, "EAST", false);
+                        EastScrimTemp.Clear();
+                    }
+                }
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetWestScrimMessage())//WEST SCRIM SIGN UP
             {
@@ -479,7 +540,20 @@ namespace Tournabot
                 {
                     var user = await channel.GetUserAsync(reaction.UserId);
                     var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetWestScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetWestScrimMessage()) as IUserMessage;
-                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetWestScrimActiveRole());
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetWestScrimActiveRole(), WestScrimTemp, "WEST", false);
+                    WestScrimTemp.Clear();
+                    if (dmMessage != "")
+                    {
+                        var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                }
+                else if (reaction.Emote.Name == "manual_start")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetWestScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetWestScrimMessage()) as IUserMessage;
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetWestScrimActiveRole(), WestScrimTemp, "WEST", true);
+                    WestScrimTemp.Clear();
                     if (dmMessage != "")
                     {
                         var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
@@ -506,6 +580,17 @@ namespace Tournabot
                     var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
+                else if (reaction.Emote.Name == "✅")
+                {
+                    if (!WestScrimTemp.Contains(reaction.UserId) && !reaction.User.Value.IsBot && WestScrimTemp.Count() < maxScrim)
+                        WestScrimTemp.Add(reaction.UserId);
+                    if (WestScrimTemp.Count() == maxScrim)
+                    {
+                        var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetWestScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetWestScrimMessage()) as IUserMessage;
+                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetWestScrimActiveRole(), WestScrimTemp, "WEST", false);
+                        WestScrimTemp.Clear();
+                    }
+                }
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetEUScrimMessage())//EU SCRIM SIGN UP
             {
@@ -513,7 +598,20 @@ namespace Tournabot
                 {
                     var user = await channel.GetUserAsync(reaction.UserId);
                     var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEUScrimMessage()) as IUserMessage;
-                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetEUScrimActiveRole());
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetEUScrimActiveRole(), EUScrimTemp, "EU", false);
+                    EUScrimTemp.Clear();
+                    if (dmMessage != "")
+                    {
+                        var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                }
+                else if (reaction.Emote.Name == "manual_start")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEUScrimMessage()) as IUserMessage;
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetEUScrimActiveRole(), EUScrimTemp, "EU", true);
+                    EUScrimTemp.Clear();
                     if (dmMessage != "")
                     {
                         var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
@@ -540,6 +638,17 @@ namespace Tournabot
                     var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
+                else if (reaction.Emote.Name == "✅")
+                {
+                    if (!EUScrimTemp.Contains(reaction.UserId) && !reaction.User.Value.IsBot && EUScrimTemp.Count() < maxScrim)
+                        EUScrimTemp.Add(reaction.UserId);
+                    if (EUScrimTemp.Count() == maxScrim)
+                    {
+                        var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEUScrimMessage()) as IUserMessage;
+                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetEUScrimActiveRole(), EUScrimTemp, "EU", false);
+                        EUScrimTemp.Clear();
+                    }
+                }
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetSAScrimMessage())//SA SCRIM SIGN UP
             {
@@ -547,7 +656,20 @@ namespace Tournabot
                 {
                     var user = await channel.GetUserAsync(reaction.UserId);
                     var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSAScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSAScrimMessage()) as IUserMessage;
-                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetSAScrimActiveRole());
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetSAScrimActiveRole(), SAScrimTemp, "SA", false);
+                    SAScrimTemp.Clear();
+                    if (dmMessage != "")
+                    {
+                        var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                }
+                else if (reaction.Emote.Name == "manual_start")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSAScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSAScrimMessage()) as IUserMessage;
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetSAScrimActiveRole(), SAScrimTemp, "SA", true);
+                    SAScrimTemp.Clear();
                     if (dmMessage != "")
                     {
                         var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
@@ -574,6 +696,17 @@ namespace Tournabot
                     var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
+                else if (reaction.Emote.Name == "✅")
+                {
+                    if (!SAScrimTemp.Contains(reaction.UserId) && !reaction.User.Value.IsBot && SAScrimTemp.Count() < maxScrim)
+                        SAScrimTemp.Add(reaction.UserId);
+                    if (SAScrimTemp.Count() == maxScrim)
+                    {
+                        var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSAScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSAScrimMessage()) as IUserMessage;
+                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetSAScrimActiveRole(), SAScrimTemp, "SA", false);
+                        SAScrimTemp.Clear();
+                    }
+                }
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetSPScrimMessage())//SP SCRIM SIGN UP
             {
@@ -581,7 +714,20 @@ namespace Tournabot
                 {
                     var user = await channel.GetUserAsync(reaction.UserId);
                     var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSPScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSPScrimMessage()) as IUserMessage;
-                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetSPScrimActiveRole());
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetSPScrimActiveRole(), SPScrimTemp, "SP", false);
+                    SPScrimTemp.Clear();
+                    if (dmMessage != "")
+                    {
+                        var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                }
+                else if (reaction.Emote.Name == "manual_start")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSPScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSPScrimMessage()) as IUserMessage;
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetSPScrimActiveRole(), SPScrimTemp, "SP", true);
+                    SPScrimTemp.Clear();
                     if (dmMessage != "")
                     {
                         var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
@@ -608,6 +754,17 @@ namespace Tournabot
                     var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
                 }
+                else if (reaction.Emote.Name == "✅")
+                {
+                    if (!SPScrimTemp.Contains(reaction.UserId) && !reaction.User.Value.IsBot && SPScrimTemp.Count() < maxScrim)
+                        SPScrimTemp.Add(reaction.UserId);
+                    if (SPScrimTemp.Count() == maxScrim)
+                    {
+                        var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSPScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSPScrimMessage()) as IUserMessage;
+                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetSPScrimActiveRole(), SPScrimTemp, "SP", false);
+                        SPScrimTemp.Clear();
+                    }
+                }
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetAUScrimMessage())//AU SCRIM SIGN UP
             {
@@ -615,7 +772,20 @@ namespace Tournabot
                 {
                     var user = await channel.GetUserAsync(reaction.UserId);
                     var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetAUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetAUScrimMessage()) as IUserMessage;
-                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetAUScrimActiveRole());
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetAUScrimActiveRole(), AUScrimTemp, "AU", false);
+                    AUScrimTemp.Clear();
+                    if (dmMessage != "")
+                    {
+                        var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                        await dmChannel.SendMessageAsync(dmMessage);
+                    }
+                }
+                else if (reaction.Emote.Name == "manual_start")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetAUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetAUScrimMessage()) as IUserMessage;
+                    var dmMessage = await StartScrim(user.Id, signUpMessage, services.GetService<ConfigHandler>().GetAUScrimActiveRole(), AUScrimTemp, "AU", true);
+                    AUScrimTemp.Clear();
                     if (dmMessage != "")
                     {
                         var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
@@ -641,6 +811,17 @@ namespace Tournabot
                     var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
                     var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
                     await dashboardMessage.ModifyAsync(x => x.Embed = builder);
+                }
+                else if (reaction.Emote.Name == "✅")
+                {
+                    if (!AUScrimTemp.Contains(reaction.UserId) && !reaction.User.Value.IsBot && AUScrimTemp.Count() < maxScrim)
+                        AUScrimTemp.Add(reaction.UserId);
+                    if (AUScrimTemp.Count() == maxScrim)
+                    {
+                        var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetAUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetAUScrimMessage()) as IUserMessage;
+                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetAUScrimActiveRole(), AUScrimTemp, "AU", false);
+                        AUScrimTemp.Clear();
+                    }
                 }
             }
         }
@@ -1825,33 +2006,24 @@ namespace Tournabot
             return message;
         }
 
-        public async Task<string> StartScrim(ulong userId, IUserMessage signUpMessage, ulong roleId)
+        public async Task<string> StartScrim(ulong userId, IUserMessage signUpMessage, ulong roleId, List<ulong> reactions, string region, bool trim)
         {
             string message = "";
-            if (guild.GetRole(services.GetService<ConfigHandler>().GetScrimAdminRole()).Members.Any(x => x.Id == userId))//Success finding the admin role for user
+            if (guild.GetRole(services.GetService<ConfigHandler>().GetScrimAdminRole()).Members.Any(x => x.Id == userId)
+                || guild.GetUser(userId).IsBot)//Success finding the admin role for user
             {
                 var emote = new Emoji("✅");
                 var builder = new StringBuilder();
-                builder.AppendLine("```USERS SIGNED UP:");
-                //signUpMessage = signUpMessage as SocketUserMessage;
-                var reactions = await signUpMessage.GetReactionUsersAsync(emote,50).FlattenAsync();//Max 20 for 2 sets
-                signUpMessage = signUpMessage as RestUserMessage;
-                reactions = await signUpMessage.GetReactionUsersAsync(emote, 50).FlattenAsync();//Max 20 for 2 sets
-                reactions.OrderBy(x => x.CreatedAt);
-                reactions = reactions.TakeLast(reactions.Count() - 1);//Removes the bot
-                if(reactions.Count() > 10 && reactions.Count() < 20)//Remove left over entries
-                {
-                    reactions = reactions.Take(10);
-                }
-                else if(reactions.Count() >= 20)
-                {
-                    reactions = reactions.Take(20);
-                }
+                builder.AppendLine("```USERS SIGNED UP FOR " + region + ":");
                 var counter = 1;
+                if(trim && reactions.Count() > 10)
+                {
+                    reactions = reactions.GetRange(0, (reactions.Count() - reactions.Count() % 10));
+                }
                 foreach(var user in reactions)
                 {
-                    roleQueue.Enqueue((user.Id, roleId, true));
-                    builder.AppendLine(counter + " - " + user.Username);
+                    roleQueue.Enqueue((user, roleId, true));
+                    builder.AppendLine(counter + " - " + guild.GetUser(user).Username);
                     counter++;
                 }
                 builder.AppendLine("```");
