@@ -176,9 +176,21 @@ namespace Tournabot
         [Command("checkInMessage", RunMode = RunMode.Async)]
         [Summary("Set the message for checkins")]
         [RequireContext(ContextType.Guild)]
-        public async Task CheckInMessage([Remainder] string text)
+        public async Task CheckInMessage(string tournamentDateTime, [Remainder] string text)
         {
-            var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text);
+            var checkinBuilder = new EmbedBuilder()
+                .WithDescription(text)
+                .WithColor(new Color(0xFFB200))
+                .WithAuthor(author =>
+                {
+                    author
+                        .WithName("Check-Ins are now OPEN!")
+                        .WithIconUrl("https://i.imgur.com/YYatELp.png");
+                })
+                .AddField("Rules and Info", "All rules and info is located in the tournament-rules channel.")
+                .AddField("Tournament Time", tournamentDateTime + " EST")
+                .AddField("Click the ✅ to check in.", "⠀").build();
+            var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text: Context.Guild.EveryoneRole.Mention, embed: checkinBuilder);
             var emote = new Emoji("✅");
             await message.AddReactionAsync(emote);
             config.SaveCheckInMessage(message);
