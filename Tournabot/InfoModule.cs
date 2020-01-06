@@ -161,7 +161,7 @@ namespace Tournabot
                             .WithName("Sign-ups are now OPEN!")
                             .WithIconUrl("https://i.imgur.com/YYatELp.png");
                     })
-                    .AddField("Rules and Info", "All rules and info is located in the tournament-rules channel.")
+                    .AddField("Rules and Info", "All rules and info is located in the <#486912876162842645> channel.")
                     .AddField("Tournament Date", tournamentDateMonth + " " + tournamentDateDay + " at " + tournamentDateTime + " EST")
                     .AddField("Click the ✅ to sign up.", "Remember to select your region.")
                     .AddField("If not already registered", "In a dm with the bot do !join <your name> like !join lilscarerow");
@@ -178,6 +178,7 @@ namespace Tournabot
         [RequireContext(ContextType.Guild)]
         public async Task CheckInMessage(string tournamentDateTime, [Remainder] string text)
         {
+
             var checkinBuilder = new EmbedBuilder()
                 .WithDescription(text)
                 .WithColor(new Color(0xFFB200))
@@ -187,7 +188,7 @@ namespace Tournabot
                         .WithName("Check-Ins are now OPEN!")
                         .WithIconUrl("https://i.imgur.com/YYatELp.png");
                 })
-                .AddField("Rules and Info", "All rules and info is located in the tournament-rules channel.")
+                .AddField("Rules and Info", "All rules and info is located in the <#486912876162842645> channel.")
                 .AddField("Tournament Time", tournamentDateTime + " EST")
                 .AddField("Click the ✅ to check in.", "⠀").Build();
             var message = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).SendMessageAsync(text: Context.Guild.EveryoneRole.Mention, embed: checkinBuilder);
