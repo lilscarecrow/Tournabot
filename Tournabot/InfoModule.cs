@@ -83,7 +83,7 @@ namespace Tournabot
         public async Task Dm()
         {
             var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync("Hello! Welcome to The Darwin Elite. This is a hub for many Darwin Tournaments to come! " +
+            await dmChannel.SendMessageAsync("Hello! Welcome to The Darwin Pro League. This is a hub for many Darwin Tournaments to come! " +
                 "In order to keep members organized, please reply with the following information (with the `!join` command): \n" +
                 "```In-game Name```\n" +
                 "Example:\n" +
