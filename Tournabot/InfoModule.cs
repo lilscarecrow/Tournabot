@@ -701,6 +701,15 @@ namespace Tournabot
             await message.AddReactionAsync(emote);
             config.SaveScrimMessage(message);
         }
+
+        [Command("RemovePlayer", RunMode = RunMode.Async)]
+        [Summary("Remove player from the DB")]
+        [RequireContext(ContextType.Guild)]
+        public async Task RemovePlayer(ulong id)
+        {
+            var message = await program.RemovePlayer(id);
+            await Context.Channel.SendMessageAsync(message);
+        }
     }
 
     [Director]
