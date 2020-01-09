@@ -702,6 +702,22 @@ namespace Tournabot
         }
     }
 
+    [ScrimAdmin]
+    public class ScrimAdminModule : ModuleBase<SocketCommandContext>
+    {
+        public Program program { get; set; }
+        public ConfigHandler config { get; set; }
+
+        [Command("scrimSize", RunMode = RunMode.Async)]
+        [Summary("Change max scrim size")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ScrimSize(int size)
+        {
+            var message = await program.ScrimSize(size);
+            await Context.Channel.SendMessageAsync(message);
+        }
+    }
+
     [Director]
     public class DirectorModule : ModuleBase<SocketCommandContext>
     {

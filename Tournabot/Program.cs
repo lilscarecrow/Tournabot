@@ -2192,5 +2192,14 @@ namespace Tournabot
             await signUpMessage.AddReactionAsync(emote2);
             return message;
         }
+
+        public async Task<string> ScrimSize(int size)
+        {
+            string message = "ScrimSize";
+            maxScrim = size;
+            message = "Max scrim size set to " + size + " players!";
+            await Task.CompletedTask;
+            return message;
+        }
     }
 }
