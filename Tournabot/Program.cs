@@ -60,6 +60,7 @@ namespace Tournabot
             client.MessageReceived += HandleCommand;
             client.UserJoined += HandleJoinedGuild;
             client.ReactionAdded += HandleReaction;
+            client.ReactionRemoved += HandleReactionRemoved;
             client.UserLeft += HandleLeaveGuild;
             client.Log += Log;
             var timer = new Timer(4000);
@@ -124,6 +125,14 @@ namespace Tournabot
             if (reaction.UserId == client.CurrentUser.Id)
                 return;
             Task.Run(() => handleReactionCheck(message, channel, reaction));
+            await Task.CompletedTask;
+        }
+
+        public async Task HandleReactionRemoved(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            if (reaction.UserId == client.CurrentUser.Id)
+                return;
+            Task.Run(() => handleReactionRemovedCheck(message, channel, reaction));
             await Task.CompletedTask;
         }
 
@@ -553,13 +562,13 @@ namespace Tournabot
                     if (EastScrimTemp.Count() == maxScrim)
                     {
                         var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEastScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEastScrimMessage()) as IUserMessage;
-                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetEastScrimActiveRole(), EastScrimTemp, "EAST", false);
-                        Console.WriteLine(EastScrimTemp.Count());
-                        foreach (var thing in EastScrimTemp)
-                        {
-                            Console.WriteLine(thing);
-                        }
+                        var dmMessage = await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetEastScrimActiveRole(), EastScrimTemp, "EAST", false);
                         EastScrimTemp.Clear();
+                        if (dmMessage != "")
+                        {
+                            var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                            await dmChannel.SendMessageAsync(dmMessage);
+                        }
                     }
                 }
             }
@@ -616,8 +625,13 @@ namespace Tournabot
                     if (WestScrimTemp.Count() == maxScrim)
                     {
                         var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetWestScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetWestScrimMessage()) as IUserMessage;
-                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetWestScrimActiveRole(), WestScrimTemp, "WEST", false);
+                        var dmMessage = await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetWestScrimActiveRole(), WestScrimTemp, "WEST", false);
                         WestScrimTemp.Clear();
+                        if (dmMessage != "")
+                        {
+                            var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                            await dmChannel.SendMessageAsync(dmMessage);
+                        }
                     }
                 }
             }
@@ -674,8 +688,13 @@ namespace Tournabot
                     if (EUScrimTemp.Count() == maxScrim)
                     {
                         var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetEUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetEUScrimMessage()) as IUserMessage;
-                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetEUScrimActiveRole(), EUScrimTemp, "EU", false);
+                        var dmMessage = await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetEUScrimActiveRole(), EUScrimTemp, "EU", false);
                         EUScrimTemp.Clear();
+                        if (dmMessage != "")
+                        {
+                            var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                            await dmChannel.SendMessageAsync(dmMessage);
+                        }
                     }
                 }
             }
@@ -732,8 +751,13 @@ namespace Tournabot
                     if (SAScrimTemp.Count() == maxScrim)
                     {
                         var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSAScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSAScrimMessage()) as IUserMessage;
-                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetSAScrimActiveRole(), SAScrimTemp, "SA", false);
+                        var dmMessage = await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetSAScrimActiveRole(), SAScrimTemp, "SA", false);
                         SAScrimTemp.Clear();
+                        if (dmMessage != "")
+                        {
+                            var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                            await dmChannel.SendMessageAsync(dmMessage);
+                        }
                     }
                 }
             }
@@ -790,8 +814,13 @@ namespace Tournabot
                     if (SPScrimTemp.Count() == maxScrim)
                     {
                         var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetSPScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetSPScrimMessage()) as IUserMessage;
-                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetSPScrimActiveRole(), SPScrimTemp, "SP", false);
+                        var dmMessage = await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetSPScrimActiveRole(), SPScrimTemp, "SP", false);
                         SPScrimTemp.Clear();
+                        if (dmMessage != "")
+                        {
+                            var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                            await dmChannel.SendMessageAsync(dmMessage);
+                        }
                     }
                 }
             }
@@ -848,16 +877,44 @@ namespace Tournabot
                     if (AUScrimTemp.Count() == maxScrim)
                     {
                         var signUpMessage = await guild.GetTextChannel(services.GetService<ConfigHandler>().GetAUScrimChannel()).GetMessageAsync(services.GetService<ConfigHandler>().GetAUScrimMessage()) as IUserMessage;
-                        await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetAUScrimActiveRole(), AUScrimTemp, "AU", false);
+                        var dmMessage = await StartScrim(client.CurrentUser.Id, signUpMessage, services.GetService<ConfigHandler>().GetAUScrimActiveRole(), AUScrimTemp, "AU", false);
                         AUScrimTemp.Clear();
+                        if (dmMessage != "")
+                        {
+                            var dmChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminLogsChannel());
+                            await dmChannel.SendMessageAsync(dmMessage);
+                        }
                     }
+                }
+            }
+        }
+
+        private async Task handleReactionRemovedCheck(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            if (message.Id == services.GetService<ConfigHandler>().GetScrimMessage())//SCRIM GENERIC REMOVED
+            {
+                if (reaction.Emote.Name == "✅")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var dmMessage = await RemoveScrimSignUp(user.Id);
+                    var dmChannel = await user.GetOrCreateDMChannelAsync();
+                    await dmChannel.SendMessageAsync(dmMessage);
+                }
+            }
+            else if (message.Id == services.GetService<ConfigHandler>().GetSignUpMessage())//SIGN UP REMOVED
+            {
+                if (reaction.Emote.Name == "✅")
+                {
+                    var user = await channel.GetUserAsync(reaction.UserId);
+                    var mess = await Unregister(user.Id);
+                    var dmChannel = await reaction.User.Value.GetOrCreateDMChannelAsync();
+                    await dmChannel.SendMessageAsync(mess);
                 }
             }
         }
 
         public async Task HandleJoinedGuild(SocketGuildUser user)
         {
-            //var OwnerChannel = await user.Guild.Owner.GetOrCreateDMChannelAsync();
             var channel = await user.GetOrCreateDMChannelAsync();
             var message = "Hello! Welcome to The Darwin Pro League. This is a hub for many Darwin Tournaments to come! " +
                 "In order to keep members organized, please reply in THIS dm channel with the following information (with the `!join` command): \n" +
@@ -868,9 +925,56 @@ namespace Tournabot
                 "```!status\n" +
                 "!unregister```\n" +
                 "If you have any questions or encounter any problems, please DM lilscarecrow#5308 on Discord.";
+            var builder = new EmbedBuilder()
+                .WithTitle("Welcome to Darwin Pro League!")
+                .WithDescription("This is a hub for many Darwin Tournaments and scrims. In order to keep members organized, " +
+                "please reply in **THIS** dm with the following information (with the !join command) : \n ```In-Game Name```")
+                .WithColor(new Color(0x8169FB))
+                .WithThumbnailUrl("https://i.imgur.com/TMiiPvl.png")
+                .AddField("Example:", "!join lilscarecrow")
+                .AddField("Other Command:", "!status")
+                .AddField("Please choose a region by reacting to the first message in #region|scrim-selection.", "")
+                .AddField("After that you may react to the other message in #region|scrim-selection to get access to scrims.", "")
+                .AddField("If you have any questions or encounter any problems", "DM lilscarecrow#5308 on Discord.");
+            var embed = builder.Build();
             await channel.SendMessageAsync(message);
-            // await OwnerChannel.SendMessageAsync(message);
             Console.WriteLine("User: " + user.Username + " got the join message.");
+            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
+            {
+                try
+                {
+                    var dbUser = await db.Users.SingleOrDefaultAsync(u => u.Id == user.Id);
+                    if (dbUser != null)
+                    {
+                        message = "Member already in the database:" +
+                            "```Name: " + dbUser.Name + "\nRegion: " + dbUser.Region + "\nSigned Up: " + dbUser.SignedUp + "\nChecked In: " + dbUser.CheckedIn + "```";
+                    }
+                    else
+                    {
+                        var discordTag =  user.Username + "#" + user.DiscriminatorValue;
+                        dbUser = new Users
+                        {
+                            Id = user.Id,
+                            DiscordTag = discordTag,
+                            Name = user.Username,
+                            Region = "XX",
+                            SignedUp = false,
+                            CheckedIn = false,
+                            WaitList = false,
+                            IsDirector = false
+                        };
+                        db.Users.Add(dbUser);
+                        message = "User: " + user.Username + " was added to the database.";
+                    }
+                    await db.SaveChangesAsync();
+                    Console.WriteLine(message);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
+                }
+            }
         }
 
         private Task Log(LogMessage msg)

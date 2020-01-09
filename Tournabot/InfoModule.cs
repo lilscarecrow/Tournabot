@@ -67,16 +67,6 @@ namespace Tournabot
             await Context.Channel.SendMessageAsync(message);
         }
 
-        [Command("unregister", RunMode = RunMode.Async)]
-        [Summary("Unregister for the tourney")]
-        [RequireContext(ContextType.DM)]
-        public async Task Unregister()
-        {
-            var message = await program.Unregister(Context.User.Id);
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
-        }
-
         [Command("dm", RunMode = RunMode.Async)]
         [Summary("Create another DM channel")]
         [RequireContext(ContextType.Guild)]
@@ -693,7 +683,7 @@ namespace Tournabot
         {
             var builder = new EmbedBuilder()
                 .WithTitle("Scrim Role Assignment")
-                .WithDescription("Click the :white_check_mark: to get access to scrims.")
+                .WithDescription("Click the :white_check_mark: to get access to scrims. Remove reaction to remove access.")
                 .WithColor(new Color(0xB88E00))
                 .WithThumbnailUrl("https://i.imgur.com/hJU393s.png").Build();
             var message = await Context.Guild.GetTextChannel(config.GetScrimChannel()).SendMessageAsync(embed: builder);
@@ -702,7 +692,7 @@ namespace Tournabot
             config.SaveScrimMessage(message);
         }
 
-        [Command("RemovePlayer", RunMode = RunMode.Async)]
+        [Command("removePlayer", RunMode = RunMode.Async)]
         [Summary("Remove player from the DB")]
         [RequireContext(ContextType.Guild)]
         public async Task RemovePlayer(ulong id)
