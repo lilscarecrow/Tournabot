@@ -58,6 +58,7 @@ namespace Tournabot
             public string scrimAdminLogsChannel;
             public string scrimChannel;
             public string scrimMessage;
+            public string scrimSize;
         }
 
         public ConfigHandler()
@@ -106,7 +107,8 @@ namespace Tournabot
                 dashboardMessage = "",
                 scrimAdminLogsChannel = "",
                 scrimChannel = "",
-                scrimMessage = ""
+                scrimMessage = "",
+                scrimSize = ""
             };
         }
 
@@ -696,6 +698,25 @@ namespace Tournabot
         public ulong GetScrimAdminLogsChannel()
         {
             return ulong.Parse(conf.scrimAdminLogsChannel);
+        }
+
+        public int GetMaxScrimSize()
+        {
+            return int.Parse(conf.scrimSize);
+        }
+
+        public void SetMaxScrimSize(int size)
+        {
+            conf.scrimSize = size.ToString();
+
+            using (StreamWriter sw = new StreamWriter(configPath, false))
+            {
+                sw.WriteLine(JsonConvert.SerializeObject(conf));
+            }
+            using (StreamReader reader = new StreamReader(configPath))
+            {
+                conf = JsonConvert.DeserializeObject<Config>(reader.ReadLine());
+            }
         }
     }
 }

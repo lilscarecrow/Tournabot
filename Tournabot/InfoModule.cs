@@ -232,19 +232,13 @@ namespace Tournabot
         [RequireContext(ContextType.Guild)]
         public async Task RefreshRegions()
         {
-            var emoteEast = new Emoji("🇺🇸");
-            var emoteEU = new Emoji("🇪🇺");
-            var emoteWest = new Emoji("🇼");
             var regionMessage = await Context.Guild.GetTextChannel(config.GetSignUpChannel()).GetMessageAsync(config.GetRegionMessage()) as RestUserMessage;
             if (regionMessage == null)
             {
                 await Context.Channel.SendMessageAsync("Cannot find region message!");
                 return;
             }
-            var reactionsEast = await regionMessage.GetReactionUsersAsync(emoteEast, 1000).FlattenAsync();
-            var reactionsEU = await regionMessage.GetReactionUsersAsync(emoteEU, 1000).FlattenAsync();
-            var reactionsWest = await regionMessage.GetReactionUsersAsync(emoteWest, 1000).FlattenAsync();
-            var message = await program.RefreshRegionSelection(reactionsEast, reactionsEU, reactionsWest);
+            var message = await program.RefreshRegionSelection(regionMessage);
             await Context.Channel.SendMessageAsync(message);
         }
 
