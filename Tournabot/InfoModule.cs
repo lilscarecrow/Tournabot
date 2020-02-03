@@ -55,7 +55,7 @@ namespace Tournabot
         {
             var discordTag = Context.User.Username + "#" + Context.User.DiscriminatorValue;
             var message = await program.AddMember(Context.User.Id, discordTag, name);
-            await Context.Channel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
 
         [Command("status", RunMode = RunMode.Async)]
@@ -64,24 +64,7 @@ namespace Tournabot
         public async Task Status()
         {
             var message = await program.GetMember(Context.User.Id);
-            await Context.Channel.SendMessageAsync(message);
-        }
-
-        [Command("dm", RunMode = RunMode.Async)]
-        [Summary("Create another DM channel")]
-        [RequireContext(ContextType.Guild)]
-        public async Task Dm()
-        {
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync("Hello! Welcome to The Darwin Pro League. This is a hub for many Darwin Tournaments to come! " +
-                "In order to keep members organized, please reply with the following information (with the `!join` command): \n" +
-                "```In-game Name```\n" +
-                "Example:\n" +
-                "```!join lilscarerow```\n" +
-                "Other commands:\n" +
-                "```!status\n" +
-                "!unregister```\n" +
-                "If you have any questions or encounter any problems, please DM lilscarecrow#5308 on Discord.");
+            await Context.Channel.SendMessageAsync(embed: message);
         }
 
         [Command("help", RunMode = RunMode.Async)]
@@ -282,7 +265,7 @@ namespace Tournabot
         public async Task AddSignUp(ulong id)
         {
             var message = await program.AddMemberSignUp(id);
-            await Context.Channel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
 
         [Command("addCheckIn", RunMode = RunMode.Async)]
@@ -291,7 +274,7 @@ namespace Tournabot
         public async Task AddCheckIn(ulong id)
         {
             var message = await program.AddMemberCheckIn(id);
-            await Context.Channel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
 
         [Command("checkStatus", RunMode = RunMode.Async)]
@@ -300,7 +283,7 @@ namespace Tournabot
         public async Task Status(ulong id)
         {
             var message = await program.GetMember(id);
-            await Context.Channel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
 
         [Command("clearSignUps", RunMode = RunMode.Async)]
@@ -309,8 +292,7 @@ namespace Tournabot
         public async Task ClearSignUps()
         {
             var message = await program.ClearSignUps();
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
 
         [Command("remove", RunMode = RunMode.Async)]
@@ -319,8 +301,7 @@ namespace Tournabot
         public async Task Remove(ulong id)
         {
             var message = await program.RemovePlayer(id);
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
 
         [Command("find", RunMode = RunMode.Async)]
@@ -329,80 +310,7 @@ namespace Tournabot
         public async Task Find(string name)
         {
             var message = await program.FindMember(name);
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
-        }
-
-        [Command("addDirector", RunMode = RunMode.Async)]
-        [Summary("Add a director")]
-        [RequireContext(ContextType.Guild)]
-        public async Task AddDirector(ulong id)
-        {
-            var message = await program.AddDirector(id);
-            var user = Context.Guild.Users.SingleOrDefault(u => u.Id == id);
-            if(user != null)
-            {
-                await user.AddRoleAsync(user.Guild.GetRole(config.GetDirectorRole()));
-                message += " The member was also given the Director role.";
-            }
-            else
-                message += " The member was NOT given the Director role. Something went wrong.";
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
-        }
-
-        [Command("addFinalsDirector", RunMode = RunMode.Async)]
-        [Summary("Add a director")]
-        [RequireContext(ContextType.Guild)]
-        public async Task AddFinalsDirector(ulong id)
-        {
-            var message = await program.AddDirector(id);
-            var user = Context.Guild.Users.SingleOrDefault(u => u.Id == id);
-            if (user != null)
-            {
-                await user.AddRoleAsync(user.Guild.GetRole(config.GetFinalsDirectorRole()));
-                message += " The member was also given the Finals Director role.";
-            }
-            else
-                message += " The member was NOT given the Finals Director role. Something went wrong.";
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
-        }
-
-        [Command("removeDirector", RunMode = RunMode.Async)]
-        [Summary("Remove a director")]
-        [RequireContext(ContextType.Guild)]
-        public async Task RemoveDirector(ulong id)
-        {
-            var message = await program.RemoveDirector(id);
-            var user = Context.Guild.Users.SingleOrDefault(u => u.Id == id);
-            if (user != null)
-            {
-                await user.RemoveRoleAsync(user.Guild.GetRole(config.GetDirectorRole()));
-                message += " The member was also removed from the Director role.";
-            }
-            else
-                message += " The member was NOT revoked of the Director role. Something went wrong.";
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
-        }
-
-        [Command("removeFinalsDirector", RunMode = RunMode.Async)]
-        [Summary("Remove a director")]
-        [RequireContext(ContextType.Guild)]
-        public async Task RemoveFinalsDirector(ulong id)
-        {
-            var message = await program.RemoveDirector(id);
-            var user = Context.Guild.Users.SingleOrDefault(u => u.Id == id);
-            if (user != null)
-            {
-                await user.RemoveRoleAsync(user.Guild.GetRole(config.GetFinalsDirectorRole()));
-                message += " The member was also removed from the Finals Director role.";
-            }
-            else
-                message += " The member was NOT revoked of the Finals Director role. Something went wrong.";
-            var dmChannel = await Context.User.GetOrCreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(message);
         }
 
         [Command("roster", RunMode = RunMode.Async)]
@@ -414,50 +322,6 @@ namespace Tournabot
             await Context.Channel.SendMessageAsync(message);
         }
 
-        [Command("createBrackets", RunMode = RunMode.Async)]
-        [Summary("Create the tournament brackets")]
-        [RequireContext(ContextType.Guild)]
-        public async Task CreateBrackets()
-        {
-            var message = await program.CreateBrackets();
-
-            while (message.Length >= 1800)
-            {
-                var miniMessage = message.Substring(0, 1800);
-                await Context.Channel.SendMessageAsync(miniMessage);//await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(miniMessage);//UNCOMMENT
-                message = message.Substring(1800);
-            }
-
-            await Context.Channel.SendMessageAsync(message);//await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(message);//UNCOMMENT
-        }
-
-        [Command("calculateScores", RunMode = RunMode.Async)]
-        [Summary("Top scores for the brackets")]
-        [RequireContext(ContextType.Guild)]
-        public async Task CalculateScores(int numPlayers = 0)
-        {
-            var message = await program.CalculateScores(numPlayers);
-            await Context.Channel.SendMessageAsync(message);
-        }
-
-        [Command("updateTotal", RunMode = RunMode.Async)]
-        [Summary("Update a total score")]
-        [RequireContext(ContextType.Guild)]
-        public async Task UpdateTotal(int score, [Remainder] string name)
-        {
-            var message = await program.UpdateTotal(score, name);
-            await Context.Channel.SendMessageAsync(message);
-        }
-
-        [Command("advance", RunMode = RunMode.Async)]
-        [Summary("Advance top players")]
-        [RequireContext(ContextType.Guild)]
-        public async Task Advance(int numPlayers, bool resetScores = false)
-        {
-            var message = await program.Advance(numPlayers, resetScores);
-            await Context.Channel.SendMessageAsync(message);
-        }
-
         [Command("crown", RunMode = RunMode.Async)]
         [Summary("Crown a winner")]
         [RequireContext(ContextType.Guild)]
@@ -466,15 +330,6 @@ namespace Tournabot
             var message = await program.Crown(id);
             await Context.Guild.GetUser(id).AddRoleAsync(Context.Guild.GetRole(config.GetChampionRole()));
             await Context.Guild.GetTextChannel(config.GetBracketInfoChannel()).SendMessageAsync(message);
-        }
-
-        [Command("score", RunMode = RunMode.Async)]
-        [Summary("Set the scores for a match")]
-        [RequireContext(ContextType.Guild)]
-        public async Task Score(ulong id, string scores)
-        {
-            var message = await program.Score(id, scores, true);
-            await Context.Channel.SendMessageAsync(message);
         }
 
         [Command("nuke", RunMode = RunMode.Async)]
@@ -492,6 +347,7 @@ namespace Tournabot
                  foreach (var y in x)
                  {
                      await Context.Channel.DeleteMessageAsync(y.Id);
+                     await Task.Delay(250);
                  }
              });
         }
@@ -692,7 +548,7 @@ namespace Tournabot
         public async Task RemovePlayer(ulong id)
         {
             var message = await program.RemovePlayer(id);
-            await Context.Channel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
     }
 
@@ -708,50 +564,7 @@ namespace Tournabot
         public async Task ScrimSize(int size)
         {
             var message = await program.ScrimSize(size);
-            await Context.Channel.SendMessageAsync(message);
-        }
-    }
-
-    [Director]
-    public class DirectorModule : ModuleBase<SocketCommandContext>
-    {
-        public Program program { get; set; }
-        public ConfigHandler config { get; set; }
-
-        [Command("sendCode", RunMode = RunMode.Async)]
-        [Summary("Send the game code to your match")]
-        [RequireContext(ContextType.DM)]
-        public async Task SendCode([Remainder] string code)
-        {
-            var message = await program.SendCode(Context.User.Id, code);
-            await Context.Channel.SendMessageAsync(message);
-        }
-
-        [Command("overview", RunMode = RunMode.Async)]
-        [Summary("See the stats of your match")]
-        [RequireContext(ContextType.DM)]
-        public async Task Overview()
-        {
-            var message = await program.Overview(Context.User.Id);
-            await Context.Channel.SendMessageAsync(message);
-        }
-
-        [Command("correct", RunMode = RunMode.Async)]
-        [Summary("Change a score")]
-        [RequireContext(ContextType.DM)]
-        public async Task Correct(int score, [Remainder] string name)
-        {
-            var message = await program.Correct(Context.User.Id, score, name);
-            await Context.Channel.SendMessageAsync(message);
-        }
-
-        [Command("score", RunMode = RunMode.Async)]
-        [Summary("Set the scores for a match")]
-        [RequireContext(ContextType.DM)]
-        public async Task Score(string scores)
-        {
-            var message = await program.Score(Context.User.Id, scores, false);
-            await Context.Channel.SendMessageAsync(message);
+            await Context.Channel.SendMessageAsync(embed: message);
         }
     }
 }

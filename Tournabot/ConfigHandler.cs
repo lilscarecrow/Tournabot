@@ -59,6 +59,9 @@ namespace Tournabot
             public string scrimChannel;
             public string scrimMessage;
             public string scrimSize;
+            public string signUpRole;
+            public string checkInRole;
+            public string waitListRole;
         }
 
         public ConfigHandler()
@@ -108,7 +111,10 @@ namespace Tournabot
                 scrimAdminLogsChannel = "",
                 scrimChannel = "",
                 scrimMessage = "",
-                scrimSize = ""
+                scrimSize = "",
+                signUpRole = "",
+                checkInRole = "",
+                waitListRole = ""
             };
         }
 
@@ -708,6 +714,63 @@ namespace Tournabot
         public void SetMaxScrimSize(int size)
         {
             conf.scrimSize = size.ToString();
+
+            using (StreamWriter sw = new StreamWriter(configPath, false))
+            {
+                sw.WriteLine(JsonConvert.SerializeObject(conf));
+            }
+            using (StreamReader reader = new StreamReader(configPath))
+            {
+                conf = JsonConvert.DeserializeObject<Config>(reader.ReadLine());
+            }
+        }
+
+        public ulong GetSignUpRole()
+        {
+            return ulong.Parse(conf.signUpRole);
+        }
+
+        public void SetSignUpRole(ulong role)
+        {
+            conf.signUpRole = role.ToString();
+
+            using (StreamWriter sw = new StreamWriter(configPath, false))
+            {
+                sw.WriteLine(JsonConvert.SerializeObject(conf));
+            }
+            using (StreamReader reader = new StreamReader(configPath))
+            {
+                conf = JsonConvert.DeserializeObject<Config>(reader.ReadLine());
+            }
+        }
+
+        public ulong GetCheckInRole()
+        {
+            return ulong.Parse(conf.checkInRole);
+        }
+
+        public void SetCheckInRole(ulong role)
+        {
+            conf.checkInRole = role.ToString();
+
+            using (StreamWriter sw = new StreamWriter(configPath, false))
+            {
+                sw.WriteLine(JsonConvert.SerializeObject(conf));
+            }
+            using (StreamReader reader = new StreamReader(configPath))
+            {
+                conf = JsonConvert.DeserializeObject<Config>(reader.ReadLine());
+            }
+        }
+
+        public ulong GetWaitListRole()
+        {
+            return ulong.Parse(conf.waitListRole);
+        }
+
+        public void SetWaitListRole(ulong role)
+        {
+            conf.waitListRole = role.ToString();
 
             using (StreamWriter sw = new StreamWriter(configPath, false))
             {
