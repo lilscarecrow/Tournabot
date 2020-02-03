@@ -368,7 +368,30 @@ namespace Tournabot
                     .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                 var chan = client.GetChannel(scrimChannel) as SocketTextChannel;
                 var signUpMessage = await chan.SendMessageAsync(text: guild.GetRole(scrimRole).Mention, embed: builder);
-                services.GetService<ConfigHandler>().SetEastScrimMessage(signUpMessage.Id);
+                if(index == 0)
+                {
+                    services.GetService<ConfigHandler>().SetEastScrimMessage(signUpMessage.Id);
+                }
+                else if (index == 1)
+                {
+                    services.GetService<ConfigHandler>().SetWestScrimMessage(signUpMessage.Id);
+                }
+                else if (index == 2)
+                {
+                    services.GetService<ConfigHandler>().SetEUScrimMessage(signUpMessage.Id);
+                }
+                else if (index == 3)
+                {
+                    services.GetService<ConfigHandler>().SetSAScrimMessage(signUpMessage.Id);
+                }
+                else if (index == 4)
+                {
+                    services.GetService<ConfigHandler>().SetSPScrimMessage(signUpMessage.Id);
+                }
+                else if (index == 5)
+                {
+                    services.GetService<ConfigHandler>().SetAUScrimMessage(signUpMessage.Id);
+                }
                 await Task.Delay(5000);
                 await signUpMessage.AddReactionAsync(checkmark);
                 await Task.Delay(10000);
