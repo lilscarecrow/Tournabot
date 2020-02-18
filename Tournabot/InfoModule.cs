@@ -33,6 +33,7 @@ namespace Tournabot
             }
             IAttachment att = Context.Message.Attachments.First();
             string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), att.Filename).Replace(@"\", @"\\");
+            Console.WriteLine(filePath);
             WebClient webClient = new WebClient();
             Uri uri = new Uri(att.Url);
             await webClient.DownloadFileTaskAsync(uri, filePath);
@@ -82,8 +83,8 @@ namespace Tournabot
                         builder.Append("```User Commands:``````");
                     else if (mod.Name == "AdminModule")
                         builder.Append("```Admin Commands:``````");
-                    else if (mod.Name == "DirectorModule")
-                        builder.Append("```Director Commands:``````");
+                    else if (mod.Name == "ScrimAdminModule")
+                        builder.Append("```Scrim Commands:``````");
                     foreach (CommandInfo command in mod.Commands)
                     {
                         builder.Append("!");
@@ -95,12 +96,12 @@ namespace Tournabot
                             builder.Append(" *" + param.Name + "*");
                         }
                         builder.Append("\n\tSummary:\n\t\t" + command.Summary + "\n");
-                        //builder.Append("```\n");
                         if (builder.Length >= 1800)
                         {
                             builder.Append("```\n");
                             await Context.Channel.SendMessageAsync(builder.Length == 0 ? "N/A" : builder.ToString());
                             builder.Clear();
+                            builder.Append("```\n");
                         }
                     }
                     builder.Append("```");
@@ -264,7 +265,8 @@ namespace Tournabot
         [RequireContext(ContextType.Guild)]
         public async Task AddSignUp(ulong id)
         {
-            var message = await program.AddMemberSignUp(id);
+            var user = Context.Guild.GetUser(id);
+            var message = await program.AddMemberSignUp(user);
             await Context.Channel.SendMessageAsync(embed: message);
         }
 
@@ -273,7 +275,8 @@ namespace Tournabot
         [RequireContext(ContextType.Guild)]
         public async Task AddCheckIn(ulong id)
         {
-            var message = await program.AddMemberCheckIn(id);
+            var user = Context.Guild.GetUser(id);
+            var message = await program.AddMemberCheckIn(user);
             await Context.Channel.SendMessageAsync(embed: message);
         }
 

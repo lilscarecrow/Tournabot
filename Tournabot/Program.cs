@@ -35,11 +35,11 @@ namespace Tournabot
         private CommandService commands;
         private IServiceProvider services;
         private List<List<string>> playerList = new List<List<string>>();
-        private Queue<(ulong, ulong, bool)> roleQueue = new Queue<(ulong, ulong, bool)>();
+        private Queue<(IUser, IRole, bool)> roleQueue = new Queue<(IUser, IRole, bool)>();
         private string[] ScrimAdmins = { "", "", "", "", "", ""};
         private SocketGuild guild;
         private int maxScrim;
-        private List<ulong>[] tempLists = { new List<ulong>(), new List<ulong>(), new List<ulong>(), new List<ulong>(), new List<ulong>(), new List<ulong>() };
+        private List<IUser>[] tempLists = { new List<IUser>(), new List<IUser>(), new List<IUser>(), new List<IUser>(), new List<IUser>(), new List<IUser>() };
         private Emoji checkmark = new Emoji("✅");
         private Emoji emoteEast = new Emoji("🇺🇸");
         private Emoji emoteEU = new Emoji("🇪🇺");
@@ -122,44 +122,38 @@ namespace Tournabot
 
         private async void RoleManager(object source, ElapsedEventArgs e)
         {
-            if(guild == null)
+            try
             {
-                guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
-            }
-            for (int i = 0; i < 3; i++)
-            {
-                if(roleQueue.Count() > 0)
+                if (guild == null)
                 {
-                    var item = roleQueue.Dequeue();
-                    Console.WriteLine("USER: " + item.Item1 + " ROLE: " + item.Item2 + " ADDED: " + item.Item3 + " TIMESTAMP: " + DateTime.Now);
-                    if(guild.GetUser(item.Item1) == null)
+                    guild = client.GetGuild(services.GetService<ConfigHandler>().GetGuild());
+                }
+                for (int i = 0; i < 3; i++)
+                {
+                    if (roleQueue.Count() > 0)
                     {
-                        Console.WriteLine("Cache Miss...Downloading Members..." + " TIMESTAMP: " + DateTime.Now);
-                        await guild.DownloadUsersAsync();
-                    }
-                    if (item.Item3)
-                    {
-                        var user = guild.GetUser(item.Item1);
-                        var role = guild.GetRole(item.Item2);
-                        if (user != null && role != null)
+                        var item = roleQueue.Dequeue();
+                        var user = item.Item1 as SocketGuildUser;
+                        var role = item.Item2 as SocketRole;
+                        Console.WriteLine("USER: " + user + " ROLE: " + item.Item2 + " ADDED: " + item.Item3 + " TIMESTAMP: " + DateTime.Now);
+                        if (item.Item3)
+                        {
                             await user.AddRoleAsync(role);
+                        }
                         else
-                            Console.WriteLine("User: " + user + " OR Role: " + role + " are NULL!" + " TIMESTAMP: " + DateTime.Now);
+                        {
+                            await user.RemoveRoleAsync(role);
+                        }
                     }
                     else
                     {
-                        var user = guild.GetUser(item.Item1);
-                        var role = guild.GetRole(item.Item2);
-                        if (user != null && role != null)
-                            await user.RemoveRoleAsync(role);
-                        else
-                            Console.WriteLine("User: " + user + " OR Role: " + role + " are NULL!" + " TIMESTAMP: " + DateTime.Now);
+                        break;
                     }
                 }
-                else
-                {
-                    break;
-                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
@@ -190,7 +184,7 @@ namespace Tournabot
         {
             if (message.Id == services.GetService<ConfigHandler>().GetRegionMessage())//REGION
             {
-                var user = await channel.GetUserAsync(reaction.UserId);
+                var user = reaction.User.Value;
                 if (reaction.Emote.Name == emoteEast.Name)
                 {
                     var dmMessage = await AddMemberRegion(user.Id, "NA", "EAST");
@@ -232,8 +226,8 @@ namespace Tournabot
             {
                 if (reaction.Emote.Name == checkmark.Name)
                 {
-                    var user = await channel.GetUserAsync(reaction.UserId);
-                    var dmMessage = await AddMemberSignUp(user.Id);
+                    var user = reaction.User.Value;
+                    var dmMessage = await AddMemberSignUp(user);
                     var dmChannel = await user.GetOrCreateDMChannelAsync();
                     await dmChannel.SendMessageAsync(embed: dmMessage);
                 }
@@ -242,8 +236,8 @@ namespace Tournabot
             {
                 if (reaction.Emote.Name == checkmark.Name)
                 {
-                    var user = await channel.GetUserAsync(reaction.UserId);
-                    var dmMessage = await AddMemberCheckIn(user.Id);
+                    var user = reaction.User.Value;
+                    var dmMessage = await AddMemberCheckIn(user);
                     var dmChannel = await user.GetOrCreateDMChannelAsync();
                     await dmChannel.SendMessageAsync(embed: dmMessage);
                 }
@@ -252,8 +246,8 @@ namespace Tournabot
             {
                 if (reaction.Emote.Name == checkmark.Name)
                 {
-                    var user = await channel.GetUserAsync(reaction.UserId);
-                    var dmMessage = await AddMemberWaitList(user.Id);
+                    var user = reaction.User.Value;
+                    var dmMessage = await AddMemberWaitList(user);
                     var dmChannel = await user.GetOrCreateDMChannelAsync();
                     await dmChannel.SendMessageAsync(embed: dmMessage);
                 }
@@ -262,8 +256,8 @@ namespace Tournabot
             {
                 if (reaction.Emote.Name == checkmark.Name)
                 {
-                    var user = await channel.GetUserAsync(reaction.UserId);
-                    var dmMessage = await AddScrimSignUp(user.Id);
+                    var user = reaction.User.Value;
+                    var dmMessage = await AddScrimSignUp(user);
                     var dmChannel = await user.GetOrCreateDMChannelAsync();
                     await dmChannel.SendMessageAsync(embed: dmMessage);
                 }
@@ -272,70 +266,70 @@ namespace Tournabot
             {
                 if (reaction.Emote.Name == emoteEast.Name)
                 {
-                    await DoScrimMessage(reaction, channel, services.GetService<ConfigHandler>().GetEastScrimChannel(), 
+                    await DoScrimMessage(reaction, services.GetService<ConfigHandler>().GetEastScrimChannel(), 
                         services.GetService<ConfigHandler>().GetEastScrimRole(), 0);
                 }
                 else if (reaction.Emote.Name == emoteWest.Name)
                 {
-                    await DoScrimMessage(reaction, channel, services.GetService<ConfigHandler>().GetWestScrimChannel(),
+                    await DoScrimMessage(reaction, services.GetService<ConfigHandler>().GetWestScrimChannel(),
                         services.GetService<ConfigHandler>().GetWestScrimRole(), 1);
                 }
                 else if (reaction.Emote.Name == emoteEU.Name)
                 {
-                    await DoScrimMessage(reaction, channel, services.GetService<ConfigHandler>().GetEUScrimChannel(),
+                    await DoScrimMessage(reaction, services.GetService<ConfigHandler>().GetEUScrimChannel(),
                         services.GetService<ConfigHandler>().GetEUScrimRole(), 2);
                 }
                 else if (reaction.Emote.Name == emoteSA.Name)
                 {
-                    await DoScrimMessage(reaction, channel, services.GetService<ConfigHandler>().GetSAScrimChannel(),
+                    await DoScrimMessage(reaction, services.GetService<ConfigHandler>().GetSAScrimChannel(),
                         services.GetService<ConfigHandler>().GetSAScrimRole(), 3);
                 }
                 else if (reaction.Emote.Name == emoteSP.Name)
                 {
-                    await DoScrimMessage(reaction, channel, services.GetService<ConfigHandler>().GetSPScrimChannel(),
+                    await DoScrimMessage(reaction, services.GetService<ConfigHandler>().GetSPScrimChannel(),
                         services.GetService<ConfigHandler>().GetSPScrimRole(), 4);
                 }
                 else if (reaction.Emote.Name == emoteAU.Name)
                 {
-                    await DoScrimMessage(reaction, channel, services.GetService<ConfigHandler>().GetAUScrimChannel(),
+                    await DoScrimMessage(reaction, services.GetService<ConfigHandler>().GetAUScrimChannel(),
                         services.GetService<ConfigHandler>().GetAUScrimRole(), 5);
                 }
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetEastScrimMessage())//EAST SCRIM SIGN UP
             {
                 await DoScrimReaction(reaction, channel, services.GetService<ConfigHandler>().GetEastScrimChannel(), 
-                    services.GetService<ConfigHandler>().GetEastScrimMessage(), services.GetService<ConfigHandler>().GetEastScrimActiveRole(), "EAST", 0);
+                    services.GetService<ConfigHandler>().GetEastScrimMessage(), guild.GetRole(services.GetService<ConfigHandler>().GetEastScrimActiveRole()), "EAST", 0);
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetWestScrimMessage())//WEST SCRIM SIGN UP
             {
                 await DoScrimReaction(reaction, channel, services.GetService<ConfigHandler>().GetWestScrimChannel(),
-                    services.GetService<ConfigHandler>().GetWestScrimMessage(), services.GetService<ConfigHandler>().GetWestScrimActiveRole(), "WEST", 1);
+                    services.GetService<ConfigHandler>().GetWestScrimMessage(), guild.GetRole(services.GetService<ConfigHandler>().GetWestScrimActiveRole()), "WEST", 1);
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetEUScrimMessage())//EU SCRIM SIGN UP
             {
                 await DoScrimReaction(reaction, channel, services.GetService<ConfigHandler>().GetEUScrimChannel(),
-                    services.GetService<ConfigHandler>().GetEUScrimMessage(), services.GetService<ConfigHandler>().GetEUScrimActiveRole(), "EU", 2);
+                    services.GetService<ConfigHandler>().GetEUScrimMessage(), guild.GetRole(services.GetService<ConfigHandler>().GetEUScrimActiveRole()), "EU", 2);
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetSAScrimMessage())//SA SCRIM SIGN UP
             {
                 await DoScrimReaction(reaction, channel, services.GetService<ConfigHandler>().GetSAScrimChannel(),
-                    services.GetService<ConfigHandler>().GetSAScrimMessage(), services.GetService<ConfigHandler>().GetSAScrimActiveRole(), "SA", 3);
+                    services.GetService<ConfigHandler>().GetSAScrimMessage(), guild.GetRole(services.GetService<ConfigHandler>().GetSAScrimActiveRole()), "SA", 3);
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetSPScrimMessage())//SP SCRIM SIGN UP
             {
                 await DoScrimReaction(reaction, channel, services.GetService<ConfigHandler>().GetSPScrimChannel(),
-                    services.GetService<ConfigHandler>().GetSPScrimMessage(), services.GetService<ConfigHandler>().GetSPScrimActiveRole(), "SP", 4);
+                    services.GetService<ConfigHandler>().GetSPScrimMessage(), guild.GetRole(services.GetService<ConfigHandler>().GetSPScrimActiveRole()), "SP", 4);
             }
             else if (message.Id == services.GetService<ConfigHandler>().GetAUScrimMessage())//AU SCRIM SIGN UP
             {
                 await DoScrimReaction(reaction, channel, services.GetService<ConfigHandler>().GetAUScrimChannel(),
-                    services.GetService<ConfigHandler>().GetAUScrimMessage(), services.GetService<ConfigHandler>().GetAUScrimActiveRole(), "AU", 5);
+                    services.GetService<ConfigHandler>().GetAUScrimMessage(), guild.GetRole(services.GetService<ConfigHandler>().GetAUScrimActiveRole()), "AU", 5);
             }
         }
 
-        private async Task DoScrimMessage(SocketReaction reaction, ISocketMessageChannel channel, ulong scrimChannel, ulong scrimRole, int index)
+        private async Task DoScrimMessage(SocketReaction reaction, ulong scrimChannel, ulong scrimRole, int index)
         {
-            var user = await channel.GetUserAsync(reaction.UserId);
+            var user = reaction.User.Value;
             if (ScrimAdmins[index] != "")
             {
                 var messId = await reaction.Channel.GetMessageAsync(reaction.MessageId) as IUserMessage;
@@ -401,13 +395,13 @@ namespace Tournabot
             }
         }
 
-        private async Task DoScrimReaction(SocketReaction reaction, ISocketMessageChannel channel, ulong scrimChannel, ulong scrimMessage, ulong scrimRole, string region, int index)
+        private async Task DoScrimReaction(SocketReaction reaction, ISocketMessageChannel channel, ulong scrimChannel, ulong scrimMessage, IRole scrimRole, string region, int index)
         {
             if (reaction.Emote.Name == start.Name && guild.GetRole(services.GetService<ConfigHandler>().GetScrimAdminRole()).Members.Any(x => x.Id == reaction.UserId))
             {
-                var user = await channel.GetUserAsync(reaction.UserId);
+                var user = reaction.User.Value;
                 var signUpMessage = await guild.GetTextChannel(scrimChannel).GetMessageAsync(scrimMessage) as IUserMessage;
-                var dmMessage = await StartScrim(user.Id, signUpMessage, scrimRole, tempLists[index], region, false);
+                var dmMessage = await StartScrim(signUpMessage, scrimRole, tempLists[index], region, false);
                 tempLists[index].Clear();
                 if (dmMessage != "")
                 {
@@ -417,9 +411,9 @@ namespace Tournabot
             }
             else if (reaction.Emote.Name == manualStart.Name && guild.GetRole(services.GetService<ConfigHandler>().GetScrimAdminRole()).Members.Any(x => x.Id == reaction.UserId))
             {
-                var user = await channel.GetUserAsync(reaction.UserId);
+                var user = reaction.User.Value;
                 var signUpMessage = await guild.GetTextChannel(scrimChannel).GetMessageAsync(scrimMessage) as IUserMessage;
-                var dmMessage = await StartScrim(user.Id, signUpMessage, scrimRole, tempLists[index], region, true);
+                var dmMessage = await StartScrim(signUpMessage, scrimRole, tempLists[index], region, true);
                 tempLists[index].Clear();
                 if (dmMessage != "")
                 {
@@ -431,10 +425,10 @@ namespace Tournabot
             {
                 var signUpMessage = await guild.GetTextChannel(scrimChannel).GetMessageAsync(scrimMessage) as IUserMessage;
                 await signUpMessage.DeleteAsync();
-                var activeRole = guild.GetRole(scrimRole);
+                var activeRole = scrimRole as SocketRole;
                 foreach (var user in activeRole.Members)
                 {
-                    roleQueue.Enqueue((user.Id, activeRole.Id, false));
+                    roleQueue.Enqueue((user, activeRole, false));
                 }
                 ScrimAdmins[index] = "";
                 var builder = new EmbedBuilder()
@@ -450,9 +444,9 @@ namespace Tournabot
             }
             else if (reaction.Emote.Name == checkmark.Name)
             {
-                if (!tempLists[index].Contains(reaction.UserId) && !reaction.User.Value.IsBot && tempLists[index].Count() < maxScrim)
+                if (!tempLists[index].Any(x => x.Id == reaction.UserId) && !reaction.User.Value.IsBot && tempLists[index].Count() < maxScrim)
                 {
-                    tempLists[index].Add(reaction.UserId);
+                    tempLists[index].Add(reaction.User.Value);
                 }
             }
         }
@@ -462,7 +456,7 @@ namespace Tournabot
             var activeRole = guild.GetRole(active);
             foreach (var user in activeRole.Members)
             {
-                roleQueue.Enqueue((user.Id, activeRole.Id, false));
+                roleQueue.Enqueue((user, activeRole, false));
             }
             ScrimAdmins[index] = "";
             var builder = new EmbedBuilder()
@@ -483,8 +477,8 @@ namespace Tournabot
             {
                 if (reaction.Emote.Name == checkmark.Name)
                 {
-                    var user = await channel.GetUserAsync(reaction.UserId);
-                    var dmMessage = await RemoveScrimSignUp(user.Id);
+                    var user = reaction.User.Value;
+                    var dmMessage = await RemoveScrimSignUp(user);
                     var dmChannel = await user.GetOrCreateDMChannelAsync();
                     await dmChannel.SendMessageAsync(dmMessage);
                 }
@@ -493,8 +487,8 @@ namespace Tournabot
             {
                 if (reaction.Emote.Name == checkmark.Name)
                 {
-                    var user = await channel.GetUserAsync(reaction.UserId);
-                    var mess = await Unregister(user.Id);
+                    var user = reaction.User.Value;
+                    var mess = await Unregister(user);
                     var dmChannel = await reaction.User.Value.GetOrCreateDMChannelAsync();
                     await dmChannel.SendMessageAsync(embed: mess);
                 }
@@ -734,14 +728,14 @@ namespace Tournabot
             return em;
         }
 
-        public async Task<Embed> AddMemberSignUp(ulong id)
+        public async Task<Embed> AddMemberSignUp(IUser iuser)
         {
             Embed em;
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
             {
                 try
                 {
-                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id);
+                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == iuser.Id);
                     var total = db.Users.Where(u => u.SignedUp).Count();
                     if (user != null && total < 100 && !user.IsDirector)
                     {
@@ -753,7 +747,7 @@ namespace Tournabot
                             .WithColor(new Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
-                        roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetSignUpRole(), true));
+                        roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetSignUpRole()), true));
                     }
                     else if (total >= 100)
                     {
@@ -766,7 +760,7 @@ namespace Tournabot
                             .WithColor(new Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
-                        roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetWaitListRole(), true));
+                        roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetWaitListRole()), true));
                     } 
                     else
                     {
@@ -793,14 +787,14 @@ namespace Tournabot
             return em;
         }
 
-        public async Task<Embed> AddMemberCheckIn(ulong id)
+        public async Task<Embed> AddMemberCheckIn(IUser iuser)
         {
             Embed em;
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
             {
                 try
                 {
-                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id);
+                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == iuser.Id);
                     if (user != null && user.SignedUp)
                     {
                         user.CheckedIn = true;
@@ -811,7 +805,7 @@ namespace Tournabot
                             .WithColor(new Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
-                        roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetCheckInRole(), true));
+                        roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetCheckInRole()), true));
                     }
                     else if (user != null && !user.SignedUp)
                     {
@@ -847,14 +841,14 @@ namespace Tournabot
             return em;
         }
 
-        public async Task<Embed> AddMemberWaitList(ulong id)
+        public async Task<Embed> AddMemberWaitList(IUser iuser)
         {
             Embed em;
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
             {
                 try
                 {
-                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id);
+                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == iuser.Id);
                     var usersCheckedIn = db.Users.Where(u => u.CheckedIn);
                     if (usersCheckedIn.Count() >= 100)
                     {
@@ -875,7 +869,7 @@ namespace Tournabot
                             .WithColor(new Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
-                        roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetCheckInRole(), true));
+                        roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetCheckInRole()), true));
                     }
                     else if (user != null && !user.WaitList)
                     {
@@ -940,15 +934,15 @@ namespace Tournabot
                     var waitListRole = guild.GetRole(services.GetService<ConfigHandler>().GetWaitListRole());
                     foreach (var user in signedUpRole.Members)
                     {
-                        roleQueue.Enqueue((user.Id, signedUpRole.Id, false));
+                        roleQueue.Enqueue((user, signedUpRole, false));
                     }
                     foreach (var user in checkInRole.Members)
                     {
-                        roleQueue.Enqueue((user.Id, checkInRole.Id, false));
+                        roleQueue.Enqueue((user, checkInRole, false));
                     }
                     foreach (var user in waitListRole.Members)
                     {
-                        roleQueue.Enqueue((user.Id, waitListRole.Id, false));
+                        roleQueue.Enqueue((user, waitListRole, false));
                     }
                 }
                 catch (Exception ex)
@@ -1170,14 +1164,14 @@ namespace Tournabot
             return message;
         }
 
-        public async Task<Embed> Unregister(ulong id)
+        public async Task<Embed> Unregister(IUser iuser)
         {
             Embed em;
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
             {
                 try
                 {
-                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id);
+                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == iuser.Id);
                     if (user != null && user.SignedUp)
                     {
                         user.SignedUp = false;
@@ -1188,6 +1182,8 @@ namespace Tournabot
                         user.Total = null;
                         db.Users.Update(user);
                         await db.SaveChangesAsync();
+                        roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetSignUpRole()), false));
+                        roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetCheckInRole()), false));
                         em = new EmbedBuilder()
                             .WithTitle("Successfully unregistered for the upcoming tournament!")
                             .WithColor(new Color(0x169400))
@@ -1439,44 +1435,44 @@ namespace Tournabot
             return message;
         }
 
-        public async Task<Embed> AddScrimSignUp(ulong id)
+        public async Task<Embed> AddScrimSignUp(IUser iuser)
         {
             string message = "AddScrimSignUp";
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
             {
                 try
                 {
-                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id);
+                    var user = await db.Users.SingleOrDefaultAsync(u => u.Id == iuser.Id);
                     if (user != null && user.Region != "XX")
                     {
                         if(user.Region == "NA")
                         {
-                            roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetEastScrimRole(), true));
+                            roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetEastScrimRole()), true));
                             message = "You may now join NA East Scrims in DPL!";
                         }
                         else if (user.Region == "WE")
                         {
-                            roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetWestScrimRole(), true));
+                            roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetWestScrimRole()), true));
                             message = "You may now join NA West Scrims in DPL!";
                         }
                         else if (user.Region == "EU")
                         {
-                            roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetEUScrimRole(), true));
+                            roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetEUScrimRole()), true));
                             message = "You may now join EU Scrims in DPL!";
                         }
                         else if (user.Region == "SA")
                         {
-                            roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetSAScrimRole(), true));
+                            roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetSAScrimRole()), true));
                             message = "You may now join South America Scrims in DPL!";
                         }
                         else if (user.Region == "SP")
                         {
-                            roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetSPScrimRole(), true));
+                            roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetSPScrimRole()), true));
                             message = "You may now join Singapore Scrims in DPL!";
                         }
                         else if (user.Region == "AU")
                         {
-                            roleQueue.Enqueue((id, services.GetService<ConfigHandler>().GetAUScrimRole(), true));
+                            roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetAUScrimRole()), true));
                             message = "You may now join OCE Scrims in DPL!";
                         }
                     }
@@ -1505,18 +1501,15 @@ namespace Tournabot
                     .Build();
         }
 
-        public async Task<string> RemoveScrimSignUp(ulong id)
+        public async Task<string> RemoveScrimSignUp(IUser iuser)
         {
             string message = "RemoveScrimSignUp";
             using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
             {
                 try
                 {
-                    if(guild.GetUser(id) == null)
-                    {
-                        await guild.DownloadUsersAsync();
-                    }
-                    var roles = guild.GetUser(id)?.Roles.Where(x => x.Id == services.GetService<ConfigHandler>().GetEastScrimRole()
+                    var user = iuser as SocketGuildUser;
+                    var roles = user.Roles.Where(x => x.Id == services.GetService<ConfigHandler>().GetEastScrimRole()
                         || x.Id == services.GetService<ConfigHandler>().GetWestScrimRole()
                         || x.Id == services.GetService<ConfigHandler>().GetEUScrimRole()
                         || x.Id == services.GetService<ConfigHandler>().GetSAScrimRole()
@@ -1524,7 +1517,7 @@ namespace Tournabot
                         || x.Id == services.GetService<ConfigHandler>().GetAUScrimRole());
                     foreach(var role in roles)
                     {
-                        roleQueue.Enqueue((id, role.Id, false));
+                        roleQueue.Enqueue((iuser, role, false));
                     }
                     message = "Scrim role removed. You can re-react to the checkmark to get the scrim role back at anytime.";
                 }
@@ -1538,7 +1531,7 @@ namespace Tournabot
             return message;
         }
 
-        public async Task<string> StartScrim(ulong userId, IUserMessage signUpMessage, ulong roleId, List<ulong> reactions, string region, bool partial)
+        public async Task<string> StartScrim(IUserMessage signUpMessage, IRole role, List<IUser> reactions, string region, bool partial)
         {
             string message = "";
             var builder = new StringBuilder();
@@ -1550,12 +1543,8 @@ namespace Tournabot
             }
             foreach (var user in reactions)
             {
-                if (guild.GetUser(user) == null)
-                {
-                    await guild.DownloadUsersAsync();
-                }
-                roleQueue.Enqueue((user, roleId, true));
-                builder.AppendLine(counter + " - " + guild.GetUser(user)?.Username);
+                builder.AppendLine(counter + " - " + user.Username);
+                roleQueue.Enqueue((user, role, true));
                 counter++;
             }
             builder.AppendLine("```");
