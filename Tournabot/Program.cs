@@ -34,7 +34,6 @@ namespace Tournabot
         private DiscordSocketClient client;
         private CommandService commands;
         private IServiceProvider services;
-        private List<List<string>> playerList = new List<List<string>>();
         private Queue<(IUser, IRole, bool)> roleQueue = new Queue<(IUser, IRole, bool)>();
         private string[] ScrimAdmins = { "", "", "", "", "", ""};
         private SocketGuild guild;
@@ -850,7 +849,16 @@ namespace Tournabot
                 {
                     var user = await db.Users.SingleOrDefaultAsync(u => u.Id == iuser.Id);
                     var usersCheckedIn = db.Users.Where(u => u.CheckedIn);
-                    if (usersCheckedIn.Count() >= 100)
+                    if (user != null && !user.WaitList)
+                    {
+                        em = new EmbedBuilder()
+                            .WithTitle("You are not on the wait list.")
+                            .WithDescription("")
+                            .WithColor(new Color(0xFF0004))
+                            .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
+                            .Build();
+                    }
+                    else if (usersCheckedIn.Count() >= 100)
                     {
                         em = new EmbedBuilder()
                             .WithTitle("Registration is full.")
@@ -870,15 +878,6 @@ namespace Tournabot
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetCheckInRole()), true));
-                    }
-                    else if (user != null && !user.WaitList)
-                    {
-                        em = new EmbedBuilder()
-                            .WithTitle("You are not on the wait list.")
-                            .WithDescription("Please DM an admin if you would like to play.")
-                            .WithColor(new Color(0xFF0004))
-                            .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
-                            .Build();
                     }
                     else
                     {
@@ -912,7 +911,7 @@ namespace Tournabot
             {
                 try
                 {
-                    var users = db.Users.Where(u => u.SignedUp);
+                    var users = db.Users.Where(u => u.SignedUp || u.WaitList || u.CheckedIn);
                     await users.ForEachAsync(u => 
                     {
                         u.SignedUp = false;
@@ -1184,13 +1183,14 @@ namespace Tournabot
                         await db.SaveChangesAsync();
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetSignUpRole()), false));
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetCheckInRole()), false));
+                        roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetWaitListRole()), false));
                         em = new EmbedBuilder()
                             .WithTitle("Successfully unregistered for the upcoming tournament!")
                             .WithColor(new Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                     }
-                    else if (user != null && !user.SignedUp)
+                    else if (user != null && (!user.SignedUp || !user.WaitList))
                     {
                         em = new EmbedBuilder()
                             .WithTitle("You're not signed up for the upcoming tournament.")
@@ -1282,53 +1282,6 @@ namespace Tournabot
                     }
                     else
                         message = "Could not find member: " + name + ".";
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    message = "Error occurred while updating. Please DM lilscarecrow#5308 on Discord.";
-                }
-            }
-            return message;
-        }
-
-        public async Task<string> GetRoster()
-        {
-            string message = "Roster";
-            using (var db = new DarwinDBContext(services.GetService<ConfigHandler>().GetSql()))
-            {
-                try
-                {
-                    StringBuilder builder = new StringBuilder();
-                    var directors = db.Users.Where(u => u.IsDirector);
-                    var signedUp = db.Users.Where(u => u.SignedUp);
-                    var checkedIn = db.Users.Where(u => u.CheckedIn);
-                    builder.AppendLine("Directors: ``` ");
-                    await directors.ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Signed Up: NA```");
-                    await signedUp.Where(u => u.Region == "NA").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Signed Up: EU``` ");
-                    await signedUp.Where(u => u.Region == "EU").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Signed Up: WE``` ");
-                    await signedUp.Where(u => u.Region == "WE").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Signed Up: SA```");
-                    await signedUp.Where(u => u.Region == "SA").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Signed Up: SP```");
-                    await signedUp.Where(u => u.Region == "SP").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Signed Up: AU```");
-                    await signedUp.Where(u => u.Region == "AU").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Signed Up: No Region``` ");
-                    await signedUp.Where(u => u.Region == "XX").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Checked In: NA``` ");
-                    await checkedIn.Where(u => u.Region == "NA").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Checked In: EU``` ");
-                    await checkedIn.Where(u => u.Region == "EU").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Checked In: WE``` ");
-                    await checkedIn.Where(u => u.Region == "WE").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```Checked In: No Region``` ");
-                    await checkedIn.Where(u => u.Region == "XX").ForEachAsync(u => builder.AppendLine(u.Name));
-                    builder.AppendLine("```");
-                    message = builder.ToString();
                 }
                 catch (Exception ex)
                 {

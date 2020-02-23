@@ -12,6 +12,8 @@ using Tesseract;
 using System.IO;
 using System.Reflection;
 using System.Net;
+using Tournabot.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tournabot
 {
@@ -321,8 +323,92 @@ namespace Tournabot
         [RequireContext(ContextType.Guild)]
         public async Task Roster()
         {
-            var message = await program.GetRoster();
-            await Context.Channel.SendMessageAsync(message);
+            using (var db = new DarwinDBContext(config.GetSql()))
+            {
+                try
+                {
+                    StringBuilder builder = new StringBuilder();
+                    var directors = db.Users.Where(u => u.IsDirector);
+                    var signedUp = db.Users.Where(u => u.SignedUp);
+                    var checkedIn = db.Users.Where(u => u.CheckedIn);
+                    var waitList = db.Users.Where(u => u.WaitList);
+                    builder.AppendLine("```Directors:");
+                    await directors.ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Signed Up: NA");
+                    await signedUp.Where(u => u.Region == "NA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Signed Up: EU");
+                    await signedUp.Where(u => u.Region == "EU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Signed Up: WE");
+                    await signedUp.Where(u => u.Region == "WE").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Signed Up: SA");
+                    await signedUp.Where(u => u.Region == "SA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Signed Up: SP");
+                    await signedUp.Where(u => u.Region == "SP").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Signed Up: AU");
+                    await signedUp.Where(u => u.Region == "AU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Signed Up: No Region");
+                    await signedUp.Where(u => u.Region == "XX").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    await Context.Channel.SendMessageAsync(builder.ToString());
+                    builder.Clear();
+                    builder.AppendLine("```Checked In: NA");
+                    await checkedIn.Where(u => u.Region == "NA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Checked In: EU");
+                    await checkedIn.Where(u => u.Region == "EU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Checked In: WE");
+                    await checkedIn.Where(u => u.Region == "WE").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Checked In: SA");
+                    await checkedIn.Where(u => u.Region == "SA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Checked In: SP");
+                    await checkedIn.Where(u => u.Region == "SP").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Checked In: AU");
+                    await checkedIn.Where(u => u.Region == "AU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Checked In: No Region");
+                    await checkedIn.Where(u => u.Region == "XX").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```");
+                    await Context.Channel.SendMessageAsync(builder.ToString());
+                    builder.Clear();
+                    builder.AppendLine("```Wait List: NA");
+                    await waitList.Where(u => u.Region == "NA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Wait List: EU");
+                    await waitList.Where(u => u.Region == "EU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Wait List: WE");
+                    await waitList.Where(u => u.Region == "WE").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Wait List: SA");
+                    await waitList.Where(u => u.Region == "SA").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Wait List: SP");
+                    await waitList.Where(u => u.Region == "SP").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Wait List: AU");
+                    await waitList.Where(u => u.Region == "AU").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("``` ");
+                    builder.AppendLine("```Wait List: No Region");
+                    await waitList.Where(u => u.Region == "XX").ForEachAsync(u => builder.AppendLine(u.Name));
+                    builder.AppendLine("```");
+                    await Context.Channel.SendMessageAsync(builder.ToString());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
 
         [Command("crown", RunMode = RunMode.Async)]
