@@ -916,6 +916,7 @@ namespace Tournabot
                     {
                         u.SignedUp = false;
                         u.CheckedIn = false;
+                        u.WaitList = false;
                         u.FirstGame = null;
                         u.SecondGame = null;
                         u.ThirdGame = null;
@@ -1529,6 +1530,23 @@ namespace Tournabot
             var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
             await dashboardMessage.ModifyAsync(x => x.Embed = builder);
             return em;
+        }
+
+        public void RemoveActive()
+        {
+            var activeRoles = guild.Roles.Where(x => x.Id == services.GetService<ConfigHandler>().GetEastScrimActiveRole()
+              || x.Id == services.GetService<ConfigHandler>().GetWestScrimActiveRole()
+              || x.Id == services.GetService<ConfigHandler>().GetEUScrimActiveRole()
+              || x.Id == services.GetService<ConfigHandler>().GetSAScrimActiveRole()
+              || x.Id == services.GetService<ConfigHandler>().GetSPScrimActiveRole()
+              || x.Id == services.GetService<ConfigHandler>().GetAUScrimActiveRole());
+            foreach (var role in activeRoles)
+            {
+                foreach (var user in role.Members)
+                {
+                    roleQueue.Enqueue((user, role, false));
+                }
+            }
         }
     }
 }

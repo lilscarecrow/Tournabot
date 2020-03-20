@@ -639,6 +639,15 @@ namespace Tournabot
             var message = await program.RemovePlayer(id);
             await Context.Channel.SendMessageAsync(embed: message);
         }
+
+        [Command("removeActive", RunMode = RunMode.Async)]
+        [Summary("Remove all active scrim roles")]
+        [RequireContext(ContextType.Guild)]
+        public async Task RemoveActive()
+        {
+            program.RemoveActive();
+            await Task.CompletedTask;
+        }
     }
 
     [ScrimAdmin]
