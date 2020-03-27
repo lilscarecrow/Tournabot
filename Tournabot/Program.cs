@@ -12,6 +12,14 @@ using System.Text;
 using System.Collections.Generic;
 using Discord.Rest;
 using System.Timers;
+using Tesseract;
+using System.IO;
+using System.Net;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using Image = System.Drawing.Image;
+using System.Drawing.Imaging;
+using System.Text.RegularExpressions;
 
 namespace Tournabot
 {
@@ -344,7 +352,7 @@ namespace Tournabot
                     .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {ScrimAdmins[0]}\n <:cali:663097025033666560> WEST: {ScrimAdmins[1]}" +
                     $"\n :flag_eu: EU: {ScrimAdmins[2]}\n :flag_br: SA: {ScrimAdmins[3]}\n :flag_au: OCE: {ScrimAdmins[4]}\n :flag_sg: SP: {ScrimAdmins[5]}")
                     .AddField("Max Scrim Size: ", maxScrim)
-                    .WithColor(new Color(0xF5FF))
+                    .WithColor(new Discord.Color(0xF5FF))
                     .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
                 var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
                 var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
@@ -357,7 +365,7 @@ namespace Tournabot
                     "\nclick the  <:start:663144594401132603>  to start the scrim with FULL lobbies." +
                     "\nclick the  <:manual_start:663450072834375720>  to start the scrim with PARTIAL lobbies." +
                     "\nclick the  ❌  to end the scrim session.")
-                    .WithColor(new Color(0xD3FF))
+                    .WithColor(new Discord.Color(0xD3FF))
                     .WithThumbnailUrl("https://i.imgur.com/A0VNXkg.png").Build();
                 var chan = client.GetChannel(scrimChannel) as SocketTextChannel;
                 var signUpMessage = await chan.SendMessageAsync(text: guild.GetRole(scrimRole).Mention, embed: builder);
@@ -424,6 +432,7 @@ namespace Tournabot
             {
                 var signUpMessage = await guild.GetTextChannel(scrimChannel).GetMessageAsync(scrimMessage) as IUserMessage;
                 await signUpMessage.DeleteAsync();
+                tempLists[index].Clear();
                 var activeRole = scrimRole as SocketRole;
                 foreach (var user in activeRole.Members)
                 {
@@ -435,7 +444,7 @@ namespace Tournabot
                     .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {ScrimAdmins[0]}\n <:cali:663097025033666560> WEST: {ScrimAdmins[1]}" +
                     $"\n :flag_eu: EU: {ScrimAdmins[2]}\n :flag_br: SA: {ScrimAdmins[3]}\n :flag_au: OCE: {ScrimAdmins[4]}\n :flag_sg: SP: {ScrimAdmins[5]}")
                     .AddField("Max Scrim Size: ", maxScrim)
-                    .WithColor(new Color(0xF5FF))
+                    .WithColor(new Discord.Color(0xF5FF))
                     .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
                 var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
                 var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
@@ -458,12 +467,13 @@ namespace Tournabot
                 roleQueue.Enqueue((user, activeRole, false));
             }
             ScrimAdmins[index] = "";
+            tempLists[index].Clear();
             var builder = new EmbedBuilder()
                 .WithTitle("Scrim Dashboard")
                 .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {ScrimAdmins[0]}\n <:cali:663097025033666560> WEST: {ScrimAdmins[1]}" +
                 $"\n :flag_eu: EU: {ScrimAdmins[2]}\n :flag_br: SA: {ScrimAdmins[3]}\n :flag_au: OCE: {ScrimAdmins[4]}\n :flag_sg: SP: {ScrimAdmins[5]}")
                 .AddField("Max Scrim Size: ", maxScrim)
-                .WithColor(new Color(0xF5FF))
+                .WithColor(new Discord.Color(0xF5FF))
                 .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
             var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
             var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
@@ -492,6 +502,48 @@ namespace Tournabot
                     await dmChannel.SendMessageAsync(embed: mess);
                 }
             }
+            else if (message.Id == services.GetService<ConfigHandler>().GetEastScrimMessage() && reaction.Emote.Name == checkmark.Name)//EAST SCRIM SIGN UP
+            {
+                if (tempLists[0].Any(x => x.Id == reaction.UserId) && !reaction.User.Value.IsBot)
+                {
+                    tempLists[0].Remove(reaction.User.Value);
+                }
+            }
+            else if (message.Id == services.GetService<ConfigHandler>().GetWestScrimMessage() && reaction.Emote.Name == checkmark.Name)//WEST SCRIM SIGN UP
+            {
+                if (tempLists[1].Any(x => x.Id == reaction.UserId) && !reaction.User.Value.IsBot)
+                {
+                    tempLists[1].Remove(reaction.User.Value);
+                }
+            }
+            else if (message.Id == services.GetService<ConfigHandler>().GetEUScrimMessage() && reaction.Emote.Name == checkmark.Name)//EU SCRIM SIGN UP
+            {
+                if (tempLists[2].Any(x => x.Id == reaction.UserId) && !reaction.User.Value.IsBot)
+                {
+                    tempLists[2].Remove(reaction.User.Value);
+                }
+            }
+            else if (message.Id == services.GetService<ConfigHandler>().GetSAScrimMessage() && reaction.Emote.Name == checkmark.Name)//SA SCRIM SIGN UP
+            {
+                if (tempLists[3].Any(x => x.Id == reaction.UserId) && !reaction.User.Value.IsBot)
+                {
+                    tempLists[3].Remove(reaction.User.Value);
+                }
+            }
+            else if (message.Id == services.GetService<ConfigHandler>().GetSPScrimMessage() && reaction.Emote.Name == checkmark.Name)//SP SCRIM SIGN UP
+            {
+                if (tempLists[4].Any(x => x.Id == reaction.UserId) && !reaction.User.Value.IsBot)
+                {
+                    tempLists[4].Remove(reaction.User.Value);
+                }
+            }
+            else if (message.Id == services.GetService<ConfigHandler>().GetAUScrimMessage() && reaction.Emote.Name == checkmark.Name)//AU SCRIM SIGN UP
+            {
+                if (tempLists[5].Any(x => x.Id == reaction.UserId) && !reaction.User.Value.IsBot)
+                {
+                    tempLists[5].Remove(reaction.User.Value);
+                }
+            }
         }
 
         public async Task HandleJoinedGuild(SocketGuildUser user)
@@ -502,7 +554,7 @@ namespace Tournabot
                 .WithTitle("Welcome to Darwin Pro League!")
                 .WithDescription("This is a hub for many Darwin Tournaments and scrims. In order to keep members organized, " +
                 "please reply in **THIS** dm with the following information (with the !join command) : \n ```In-Game Name```")
-                .WithColor(new Color(0x8169FB))
+                .WithColor(new Discord.Color(0x8169FB))
                 .WithThumbnailUrl("https://i.imgur.com/TMiiPvl.png")
                 .AddField("Example:", "!join lilscarecrow")
                 .AddField("Other Command:", "!status")
@@ -559,6 +611,11 @@ namespace Tournabot
         {
             var message = messageParam as SocketUserMessage;
             if (message == null) return;
+            if (message.Channel.Id == 484517811159302148 && message.Attachments.Any())
+            {
+                await PerformOCR(message);
+                return;
+            }
             int argPos = 0;
             if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))) return;
             var context = new SocketCommandContext(client, message);
@@ -584,7 +641,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You are already in the database")
                             .WithDescription("I changed your name with the following information:")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .AddField("Name: ", name)
                             .AddField("Region: ", user.Region)
@@ -610,7 +667,7 @@ namespace Tournabot
                         db.Users.Add(user);
                         em = new EmbedBuilder()
                             .WithTitle("Successfully entered into the database")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .AddField("Name: ", name)
                             .AddField("Region: ", user.Region)
@@ -628,7 +685,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                             .WithTitle("An error has occured.")
                             .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                 }
@@ -648,7 +705,7 @@ namespace Tournabot
                     {
                         em = new EmbedBuilder()
                             .WithTitle("Successfully found your information")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .AddField("Name: ", user.Name)
                             .AddField("Region: ", user.Region)
@@ -663,7 +720,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You're not registered in the database.")
                             .WithDescription("Make sure to do the `!join <IN GAME NAME>` command in this DM.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .AddField("select a region in DPL's [`#🌎region│scrim-selection`] channel and try again.", "⠀")
                             .Build();
@@ -675,7 +732,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                              .WithTitle("An error has occured.")
                              .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                             .WithColor(new Color(0xFF0004))
+                             .WithColor(new Discord.Color(0xFF0004))
                              .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                              .Build();
                 }
@@ -698,7 +755,7 @@ namespace Tournabot
                         await db.SaveChangesAsync();
                         em = new EmbedBuilder()
                             .WithTitle("Successfully changed your region to " + regionName)
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                     }
@@ -707,7 +764,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You're not registered in the database.")
                             .WithDescription("Make sure to do the `!join <IN GAME NAME>` command in this DM.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .AddField("select a region in DPL's [`#🌎region│scrim-selection`] channel and try again.", "⠀")
                             .Build();
@@ -719,7 +776,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                             .WithTitle("An error has occured.")
                             .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                 }
@@ -743,7 +800,7 @@ namespace Tournabot
                         await db.SaveChangesAsync();
                         em = new EmbedBuilder()
                             .WithTitle("Successfully signed up for the upcoming tournament!")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetSignUpRole()), true));
@@ -756,7 +813,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("Registration is full.")
                             .WithDescription("But don't worry, you are now added to the wait list!")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetWaitListRole()), true));
@@ -766,7 +823,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You're not registered in the database.")
                             .WithDescription("Make sure to do the `!join <IN GAME NAME>` command in this DM.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .AddField("select a region in DPL's [`#🌎region│scrim-selection`] channel and try again.", "⠀")
                             .Build();
@@ -778,7 +835,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                             .WithTitle("An error has occured.")
                             .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                 }
@@ -801,7 +858,7 @@ namespace Tournabot
                         await db.SaveChangesAsync();
                         em = new EmbedBuilder()
                             .WithTitle("Successfully checked in for the upcoming tournament!")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetCheckInRole()), true));
@@ -811,7 +868,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You're not signed up for the tournament.")
                             .WithDescription("Please DM an admin if you would like to play.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                     }
@@ -820,7 +877,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You're not registered in the database.")
                             .WithDescription("Make sure to do the `!join <IN GAME NAME>` command in this DM.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .AddField("select a region in DPL's [`#🌎region│scrim-selection`] channel and try again.", "⠀")
                             .Build();
@@ -832,7 +889,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                             .WithTitle("An error has occured.")
                             .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                 }
@@ -854,7 +911,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You are not on the wait list.")
                             .WithDescription("")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                     }
@@ -863,7 +920,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("Registration is full.")
                             .WithDescription("Please DM an admin if you would like to play.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                     }
@@ -874,7 +931,7 @@ namespace Tournabot
                         await db.SaveChangesAsync();
                         em = new EmbedBuilder()
                             .WithTitle("Successfully checked in for the upcoming tournament!")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetCheckInRole()), true));
@@ -884,7 +941,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You're not registered in the database.")
                             .WithDescription("Make sure to do the `!join <IN GAME NAME>` command in this DM.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .AddField("select a region in DPL's [`#🌎region│scrim-selection`] channel and try again.", "⠀")
                             .Build();
@@ -896,7 +953,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                            .WithTitle("An error has occured.")
                            .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                           .WithColor(new Color(0xFF0004))
+                           .WithColor(new Discord.Color(0xFF0004))
                            .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                            .Build();
                 }
@@ -926,7 +983,7 @@ namespace Tournabot
                     var count = await db.SaveChangesAsync();
                     em = new EmbedBuilder()
                             .WithTitle("Successfully reset " + count + " records!")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                     var signedUpRole = guild.GetRole(services.GetService<ConfigHandler>().GetSignUpRole());
@@ -951,7 +1008,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                            .WithTitle("An error has occured.")
                            .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                           .WithColor(new Color(0xFF0004))
+                           .WithColor(new Discord.Color(0xFF0004))
                            .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                            .Build();
                 }
@@ -1187,7 +1244,7 @@ namespace Tournabot
                         roleQueue.Enqueue((iuser, guild.GetRole(services.GetService<ConfigHandler>().GetWaitListRole()), false));
                         em = new EmbedBuilder()
                             .WithTitle("Successfully unregistered for the upcoming tournament!")
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                     }
@@ -1195,7 +1252,7 @@ namespace Tournabot
                     {
                         em = new EmbedBuilder()
                             .WithTitle("You're not signed up for the upcoming tournament.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                     }
@@ -1204,7 +1261,7 @@ namespace Tournabot
                         em = new EmbedBuilder()
                             .WithTitle("You're not registered in the database.")
                             .WithDescription("Make sure to do the `!join <IN GAME NAME>` command in this DM.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .AddField("select a region in DPL's [`#🌎region│scrim-selection`] channel and try again.", "⠀")
                             .Build();
@@ -1216,7 +1273,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                            .WithTitle("An error has occured.")
                            .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                           .WithColor(new Color(0xFF0004))
+                           .WithColor(new Discord.Color(0xFF0004))
                            .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                            .Build();
                 }
@@ -1238,7 +1295,7 @@ namespace Tournabot
                         await db.SaveChangesAsync();
                         em = new EmbedBuilder()
                             .WithTitle("Successfully removed " + user.Name)
-                            .WithColor(new Color(0x169400))
+                            .WithColor(new Discord.Color(0x169400))
                             .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                             .Build();
                     }
@@ -1246,7 +1303,7 @@ namespace Tournabot
                     {
                         em = new EmbedBuilder()
                             .WithTitle("That player is not registered in the database.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .Build();
                     }
@@ -1257,7 +1314,7 @@ namespace Tournabot
                     em = new EmbedBuilder()
                            .WithTitle("An error has occured.")
                            .WithDescription("Please DM lilscarecrow#5308 on Discord.")
-                           .WithColor(new Color(0xFF0004))
+                           .WithColor(new Discord.Color(0xFF0004))
                            .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                            .Build();
                 }
@@ -1435,7 +1492,7 @@ namespace Tournabot
                         return new EmbedBuilder()
                             .WithTitle("You're not registered in the database or have not selected a region.")
                             .WithDescription("Make sure to do the `!join <IN GAME NAME>` command in this DM.")
-                            .WithColor(new Color(0xFF0004))
+                            .WithColor(new Discord.Color(0xFF0004))
                             .WithThumbnailUrl("https://www.freeiconspng.com/uploads/hd-error-photo-transparent-background-19.png")
                             .AddField("select a region in DPL's [`#🌎region│scrim-selection`] channel and try to react again.", "⠀")
                             .Build();
@@ -1450,7 +1507,7 @@ namespace Tournabot
             return new EmbedBuilder()
                     .WithTitle("Success!")
                     .WithDescription(message)
-                    .WithColor(new Color(0x169400))
+                    .WithColor(new Discord.Color(0x169400))
                     .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                     .Build();
         }
@@ -1516,7 +1573,7 @@ namespace Tournabot
             services.GetService<ConfigHandler>().SetMaxScrimSize(maxScrim);
             em = new EmbedBuilder()
                  .WithTitle("Max scrim size set to " + size + " players!")
-                 .WithColor(new Color(0x169400))
+                 .WithColor(new Discord.Color(0x169400))
                  .WithThumbnailUrl("https://cdn1.iconfinder.com/data/icons/interface-elements/32/accept-circle-512.png")
                  .Build();
             var builder = new EmbedBuilder()
@@ -1524,7 +1581,7 @@ namespace Tournabot
                     .WithDescription($"Click the region you would like to start a scrim for.\n :flag_us: EAST: {ScrimAdmins[0]}\n <:cali:663097025033666560> WEST: {ScrimAdmins[1]}" +
                     $"\n :flag_eu: EU: {ScrimAdmins[2]}\n :flag_br: SA: {ScrimAdmins[3]}\n :flag_au: OCE: {ScrimAdmins[4]}\n :flag_sg: SP: {ScrimAdmins[5]}")
                     .AddField("Max Scrim Size: ", maxScrim)
-                    .WithColor(new Color(0xF5FF))
+                    .WithColor(new Discord.Color(0xF5FF))
                     .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
             var dashChannel = guild.GetTextChannel(services.GetService<ConfigHandler>().GetScrimAdminChannel());
             var dashboardMessage = await dashChannel.GetMessageAsync(services.GetService<ConfigHandler>().GetDashboardMessage()) as IUserMessage;
@@ -1547,6 +1604,258 @@ namespace Tournabot
                     roleQueue.Enqueue((user, role, false));
                 }
             }
+        }
+
+        public async Task PerformOCR(SocketUserMessage message)
+        {
+            StringBuilder builder = new StringBuilder();
+            var att = message.Attachments.First();
+            string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), att.Filename).Replace(@"\", @"\\");
+            WebClient webClient = new WebClient();
+            Uri uri = new Uri(att.Url);
+            await webClient.DownloadFileTaskAsync(uri, filePath);
+            using (var loadedImage = new Bitmap(filePath))
+            {
+                var modImage = InvertImage(loadedImage);
+                modImage = ResizeImage(modImage, modImage.Width * 6, modImage.Height * 6);
+                using (var engine = new TesseractEngine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "eng", EngineMode.Default))
+                {
+                    Dictionary<string, Rect> foundWords = new Dictionary<string, Rect>();
+                    using (var img = Pix.LoadFromMemory(ImageToByte(modImage)))
+                    {
+                        using (var page = engine.Process(img))
+                        {
+                            using (var iter = page.GetIterator())
+                            {
+
+                                iter.Begin();
+                                do
+                                {
+                                    Rect symbolBounds;
+                                    if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out symbolBounds))
+                                    {
+                                        var curText = iter.GetText(PageIteratorLevel.Word).Trim();
+                                        Console.WriteLine("TEXT: " + curText + "  - POS: X1- " + symbolBounds.X1 + " X2- " + symbolBounds.X2 + " Y1- " + symbolBounds.Y1 + " Y2- " + symbolBounds.Y2);
+                                        if (Regex.Matches(curText, @"[a-zA-Z]").Count() > 0)
+                                        {
+                                            if (foundWords.ContainsKey(curText))
+                                            {
+                                                foundWords[curText] = symbolBounds;
+                                            }
+                                            else
+                                            {
+                                                foundWords.Add(curText, symbolBounds);
+                                            }
+                                        }
+                                    }
+                                } while (iter.Next(PageIteratorLevel.Word));
+                            }
+                        }
+                    }
+                    if (!foundWords.ContainsKey("SURVIVED"))
+                    {
+                        Console.WriteLine("Could not find SURVIVED text.");
+                    }
+                    else if (!foundWords.ContainsKey("DAMAGE"))
+                    {
+                        Console.WriteLine("Could not find DAMAGE text.");
+                    }
+                    else if (!foundWords.ContainsKey("KILLS"))
+                    {
+                        Console.WriteLine("Could not find KILLS text.");
+                    }
+                    else
+                    {
+                        var survived = foundWords["SURVIVED"];//Get anchor elements needed for positioning
+                        var damage = foundWords["DAMAGE"];
+                        var kills = foundWords["KILLS"];
+                        var survivedSize = survived.X2 - survived.X1;
+                        var survivedDistance = survivedSize * 7.54;
+                        var X1 = (int)Math.Floor(survived.X1 - survivedDistance);
+                        var X2 = survived.X1 - (3 * survivedSize);
+                        var Y1 = survived.Y2;
+                        var Y2 = modImage.Height;
+                        var namesCropped = CropImage(modImage, new Rectangle(X1, Y1, (X2 - X1), (Y2 - Y1)));
+                        //namesCropped.Save(@"testNamesCropped.png", System.Drawing.Imaging.ImageFormat.Png);
+                        var players = new List<string>();
+                        var playerList = new List<Player>();
+                        using (var subImg = Pix.LoadFromMemory(ImageToByte(namesCropped)))
+                        {
+                            using (var page = engine.Process(subImg))
+                            {
+                                players = page.GetText().Split().ToList();
+                            }
+                        }
+                        engine.SetVariable("tessedit_char_whitelist", "0123456789:,-");
+                        engine.SetVariable("load_system_dawg", "false");
+                        engine.SetVariable("load_freq_dawg", "false");
+                        foreach (var player in players)
+                        {
+                            if (foundWords.ContainsKey(player))//look for already saved bounding boxes
+                            {
+                                var word = foundWords[player];
+                                var p = new Player();
+                                p.name = player;
+                                X1 = survived.X1;
+                                X2 = survived.X2;
+                                Y1 = word.Y1;
+                                Y2 = word.Y2;
+                                var tempCropped = CropImage(modImage, new Rectangle(X1, Y1, (X2 - X1), (Y2 - Y1)));
+                                tempCropped.Save(@"testsurvCropped_" + player + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                                using (var subImg = Pix.LoadFromMemory(ImageToByte(tempCropped)))
+                                {
+                                    using (var page = engine.Process(subImg))
+                                    {
+                                        p.survived = Regex.Replace(page.GetText(), @"\t|\n|\r", "");
+                                    }
+                                    if (p.survived.Trim() == "")
+                                    {
+                                        p.survived = "-";
+                                    }
+                                }
+
+                                X1 = damage.X1;
+                                X2 = damage.X2;
+                                Y1 = word.Y1;
+                                Y2 = word.Y2;
+                                tempCropped = CropImage(modImage, new Rectangle(X1, Y1, (X2 - X1), (Y2 - Y1)));
+                                tempCropped.Save(@"testdmgCropped_" + player + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                                using (var subImg = Pix.LoadFromMemory(ImageToByte(tempCropped)))
+                                {
+                                    using (var page = engine.Process(subImg))
+                                    {
+                                        p.damage = Regex.Replace(page.GetText(), @"\t|\n|\r", "");
+                                    }
+                                    if (p.damage.Trim() == "")
+                                    {
+                                        using (var page = engine.Process(subImg, PageSegMode.SingleChar))
+                                        {
+                                            p.damage = Regex.Replace(page.GetText(), @"\t|\n|\r", "");
+                                        }
+                                    }
+                                }
+
+                                X1 = kills.X1;
+                                X2 = kills.X2;
+                                Y1 = word.Y1;
+                                Y2 = word.Y2;
+                                tempCropped = CropImage(modImage, new Rectangle(X1, Y1, (X2 - X1), (Y2 - Y1)));
+                                tempCropped.Save(@"testkillsCropped_" + player + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                                using (var subImg = Pix.LoadFromMemory(ImageToByte(tempCropped)))
+                                {
+                                    using (var page = engine.Process(subImg, PageSegMode.SingleChar))
+                                    {
+                                        p.kills = Regex.Replace(page.GetText(), @"\t|\n|\r", "");
+                                        if (p.kills == "7")//manually set misread values to 1
+                                        {
+                                            p.kills = "1";
+                                        }
+                                    }
+                                }
+                                playerList.Add(p);
+                            }
+                        }
+                        //Sanity Check
+                        var killTotal = playerList.Sum(x => Int32.Parse(x.kills));
+                        if (killTotal != playerList.Count() - 1)//Incorrect Kill Score (try and correct)
+                        {
+                            for (int i = 0; i < playerList.Count(); i++)
+                            {
+                                if (Int32.Parse(playerList[i].kills) == 1)
+                                {
+                                    playerList[i].kills = "7???";
+                                    break;
+                                }
+                                if (i == 2)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        builder.AppendLine("```");
+                        foreach (var entry in playerList)
+                        {
+                            builder.AppendLine("NAME: " + entry.name);
+                            builder.AppendLine("SURVIVED: " + entry.survived);
+                            builder.AppendLine("DAMAGE: " + entry.damage);
+                            builder.AppendLine("KILLS: " + entry.kills);
+                            builder.AppendLine();
+                        }
+                        builder.AppendLine("```");
+                        await message.Channel.SendMessageAsync(builder.ToString());
+                    }
+                }
+            }
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+
+        public static byte[] ImageToByte(Image img)
+        {
+            using (var stream = new MemoryStream())
+            {
+                img.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                return stream.ToArray();
+            }
+        }
+
+        public static Bitmap InvertImage(Bitmap pic)
+        {
+            for (int y = 0; (y <= (pic.Height - 1)); y++)
+            {
+                for (int x = 0; (x <= (pic.Width - 1)); x++)
+                {
+                    System.Drawing.Color inv = pic.GetPixel(x, y);
+                    inv = System.Drawing.Color.FromArgb(255, (255 - inv.R), (255 - inv.G), (255 - inv.B));
+                    pic.SetPixel(x, y, inv);
+                }
+            }
+            return pic;
+        }
+
+        public static Bitmap CropImage(Bitmap image, Rectangle region)
+        {
+            Bitmap target = new Bitmap(region.Width, region.Height);
+            using (Graphics g = Graphics.FromImage(target))
+            {
+                g.DrawImage(image, new Rectangle(0, 0, target.Width, target.Height), region, GraphicsUnit.Pixel);
+            }
+            return target;
+        }
+
+        public static Bitmap ResizeImage(Image image, int width, int height)
+        {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+
+            return destImage;
         }
     }
 }

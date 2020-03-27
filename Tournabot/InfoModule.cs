@@ -1,17 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using Discord.Rest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-//TEST
-using Tesseract;
-using System.IO;
-using System.Reflection;
-using System.Net;
 using Tournabot.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,35 +15,6 @@ namespace Tournabot
     {
         public Program program { get; set; }
         public ConfigHandler config { get; set; }
-
-        [Command("scan", RunMode = RunMode.Async)]
-        [Summary("Scan a result page")]
-        [RequireContext(ContextType.DM)]
-        public async Task Scan()
-        {
-            var message = "No file attached!";
-            if (!Context.Message.Attachments.Any())
-            {
-                await Context.Channel.SendMessageAsync(message);
-                return;
-            }
-            IAttachment att = Context.Message.Attachments.First();
-            string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), att.Filename).Replace(@"\", @"\\");
-            Console.WriteLine(filePath);
-            WebClient webClient = new WebClient();
-            Uri uri = new Uri(att.Url);
-            await webClient.DownloadFileTaskAsync(uri, filePath);
-            using (var engine = new TesseractEngine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "eng", EngineMode.Default))
-            {
-                using (var img = Pix.LoadFromFile(filePath))
-                {
-                    var page = engine.Process(img);
-                    message = page.GetText();
-                }
-            }
-            File.Delete(filePath);
-            await Context.Channel.SendMessageAsync(message);
-        }
 
         [Command("join", RunMode = RunMode.Async)]
         [Summary("Join the database fun")]
@@ -130,7 +95,7 @@ namespace Tournabot
             var signupBuilder = new EmbedBuilder()
                     .WithTitle("We are happy to annouce another tournament!")
                     .WithDescription(text)
-                    .WithColor(new Color(0x97400))
+                    .WithColor(new Discord.Color(0x97400))
                     .WithImageUrl(signupImage)
                     .WithAuthor(author => {
                         author
@@ -157,7 +122,7 @@ namespace Tournabot
 
             var checkinBuilder = new EmbedBuilder()
                 .WithDescription(text)
-                .WithColor(new Color(0xFFB200))
+                .WithColor(new Discord.Color(0xFFB200))
                 .WithAuthor(author =>
                 {
                     author
@@ -196,7 +161,7 @@ namespace Tournabot
                 "\n🇸🇬 SP\n\nIf the bot tells you that you aren't registered, you\n must do the !join name command in the dms with\n the bot first. If the" +
                 " bot doesn't message you at all, \ndm lilscarecrow directly.")
                 .WithThumbnailUrl("https://img.icons8.com/cotton/2x/globe.png")
-                .WithColor(new Color(0x202225)).Build();
+                .WithColor(new Discord.Color(0x202225)).Build();
             var message = await Context.Guild.GetTextChannel(config.GetRegionChannel()).SendMessageAsync(embed:regionBuilder);
             var emoteEast = new Emoji("🇺🇸");
             var emoteEU = new Emoji("🇪🇺");
@@ -597,7 +562,7 @@ namespace Tournabot
                 .WithTitle("Scrim Dashboard")
                 .WithDescription("Click the region you would like to start a scrim for.\n :flag_us: EAST: \n <:cali:663097025033666560> WEST: " +
                 "\n :flag_eu: EU: \n :flag_br: SA: \n :flag_au: OCE: \n :flag_sg: SP: ")
-                .WithColor(new Color(0xF5FF))
+                .WithColor(new Discord.Color(0xF5FF))
                 .WithThumbnailUrl("http://cdn.onlinewebfonts.com/svg/img_205575.png").Build();
             var message = await Context.Guild.GetTextChannel(config.GetScrimAdminChannel()).SendMessageAsync(embed: builder);
             var emoteEast = new Emoji("🇺🇸");
@@ -623,7 +588,7 @@ namespace Tournabot
             var builder = new EmbedBuilder()
                 .WithTitle("Scrim Role Assignment")
                 .WithDescription("Click the :white_check_mark: to get access to scrims. Remove reaction to remove access.")
-                .WithColor(new Color(0xB88E00))
+                .WithColor(new Discord.Color(0xB88E00))
                 .WithThumbnailUrl("https://i.imgur.com/hJU393s.png").Build();
             var message = await Context.Guild.GetTextChannel(config.GetScrimChannel()).SendMessageAsync(embed: builder);
             var emote = new Emoji("✅");
