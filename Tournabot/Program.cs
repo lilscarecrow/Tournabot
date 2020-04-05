@@ -432,12 +432,12 @@ namespace Tournabot
             {
                 var signUpMessage = await guild.GetTextChannel(scrimChannel).GetMessageAsync(scrimMessage) as IUserMessage;
                 await signUpMessage.DeleteAsync();
-                tempLists[index].Clear();
                 var activeRole = scrimRole as SocketRole;
-                foreach (var user in activeRole.Members)
+                foreach (var mem in tempLists[index])
                 {
-                    roleQueue.Enqueue((user, activeRole, false));
+                    roleQueue.Enqueue((mem, activeRole, false));
                 }
+                tempLists[index].Clear();
                 ScrimAdmins[index] = "";
                 var builder = new EmbedBuilder()
                     .WithTitle("Scrim Dashboard")
@@ -462,9 +462,9 @@ namespace Tournabot
         private async Task DoDeleteScrimMessage(ulong active, int index)
         {
             var activeRole = guild.GetRole(active);
-            foreach (var user in activeRole.Members)
+            foreach (var mem in tempLists[index])
             {
-                roleQueue.Enqueue((user, activeRole, false));
+                roleQueue.Enqueue((mem, activeRole, false));
             }
             ScrimAdmins[index] = "";
             tempLists[index].Clear();
